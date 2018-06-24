@@ -3,8 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Steering Behaviours: PATH FOLLOW</title>
-
+    <title>Garcon - Magic Bartender - Visualiser</title>
     <script src="/libs/dat.gui.min.js"></script>
     <script src="/libs/stats.min.js"></script>
     <script src="/libs/three.min.js"></script>
@@ -385,6 +384,20 @@
             clone.castShadow = true;
             var entity = new SteeringEntity(clone)
             entity.position.set(entityPosition.origin.x, 0, entityPosition.origin.z);
+            entity.paths = {}
+
+            entity.paths.toBar = []
+            entity.paths.toBar.push(xZToPoint(entityPosition.origin))
+            entityPosition.bar.forEach(function (path) {
+                entity.paths.toBar.push(xZToPoint(path))
+            })
+            entity.paths.toBar.push(xZToPoint(fixedPositions.bar))
+            entity.paths.fromBar = entity.paths.toBar.slice(0);
+            entity.paths.fromBar.reverse()
+
+            // TODO add other paths for toToilet, fromToilet, toSmoke, fromSmoke
+            // TODO - Then demo by adding config to dat.gui to test travelling
+
             entities.push(entity);
             scene.add(entity);
         })
@@ -422,7 +435,6 @@
 
         // });
 
-
         gui.add(params, 'maxSpeed', 2, 20).name('Max Speed').step(1);
         gui.add(params, 'maxForce', 1, 20).name('Max Force').step(1);
         gui.add(params, 'thresholdRadius', 10, 500).name('Threshold Radius').step(1);
@@ -433,6 +445,10 @@
         window.addEventListener('resize', onWindowResize, false);
         document.addEventListener('mousedown', onClick, true);
         animate();
+    }
+
+    function xZToPoint(xZ) {
+        return new THREE.Vector3(xZ.x, 0, xZ.z)
     }
 
     function reset() {
