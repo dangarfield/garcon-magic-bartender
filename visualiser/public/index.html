@@ -73,20 +73,36 @@
         }
     ];
 
+    params = {
+        maxSpeed: 5,
+        maxForce: 3,
+        numEntities: 72,
+        thresholdRadius: 200,
+        loop: false,
+        avoid: true,
+        avoidDistance: 10,
+        size: {
+            x: 2250,
+            z: 1500
+        }
+    }
+
     function onClick(event) {
-        if (event.altKey) {
-            var mouse3D = new THREE.Vector3((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) *
-                2 + 1, 0);
-            var raycaster = new THREE.Raycaster();
-            raycaster.setFromCamera(mouse3D, camera);
-            var intersects = raycaster.intersectObjects(scene.children);
-            if (intersects.length > 0) {
-                var point = new THREE.Vector3(intersects[0].point.x, entities[0].position.y, intersects[0].point.z)
+        var mouse3D = new THREE.Vector3((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) *
+            2 + 1, 0);
+        var raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse3D, camera);
+        var intersects = raycaster.intersectObjects(scene.children);
+        if (intersects.length > 0) {
+            var point = new THREE.Vector3(intersects[0].point.x, entities[0].position.y, intersects[0].point.z)
+            console.log('x: ' + Number(intersects[0].point.x) + ' , y: ' + intersects[0].point.z)
+            if (event.altKey) {
                 addFlag(point)
                 path.push(point)
-
             }
-        } else if (event.ctrlKey) {
+        }
+
+        if (event.ctrlKey) {
             reset();
         }
     }
@@ -157,9 +173,103 @@
         loadAnimation(0)
     }
 
+    function createFurnitureEntity(geometry, material, x, z, rotate) {
+        var mesh = new THREE.Mesh(geometry, material);
+        mesh.position.setY(geometry.parameters.height / 2);
+        if (rotate) {
+            mesh.rotateY(Math.PI / 4);
+        }
+        var entity = new SteeringEntity(mesh);
+        entity.maxSpeed = 0;
+        entity.lookAtDirection = false;
+        entity.position.set(x, 0, z);
+        furniture.push(entity)
+        scene.add(entity);
+    }
+
+    function loadFurniture() {
+        furniture = []
+
+        // Bar
+        var barGeometry = new THREE.BoxGeometry(1000, 100, 100);
+        var barGeometrySide = new THREE.BoxGeometry(100, 100, 450);
+        var barMaterial = new THREE.MeshBasicMaterial({
+            color: 0xFFFFFF,
+            wireframe: false
+        });
+        createFurnitureEntity(barGeometry, barMaterial, 750, -1000, false)
+        createFurnitureEntity(barGeometrySide, barMaterial, 1200, -1275, false)
+        createFurnitureEntity(barGeometrySide, barMaterial, 300, -1275, false)
+
+
+
+        // Walls
+        var wallGeometryT1 = new THREE.BoxGeometry(20, 200, 350);
+        var wallGeometryT2 = new THREE.BoxGeometry(20, 200, 450);
+        var wallGeometryT3 = new THREE.BoxGeometry(1750, 200, 20);
+
+        var wallGeometryB1 = new THREE.BoxGeometry(1180, 200, 20);
+        var wallGeometryB2 = new THREE.BoxGeometry(20, 200, 250);
+        var wallGeometryB3 = new THREE.BoxGeometry(20, 200, 250);
+        var wallGeometryB4 = new THREE.BoxGeometry(20, 200, 650);
+
+        var wallMaterial = new THREE.MeshBasicMaterial({
+            color: 0x222222,
+            wireframe: false
+        });
+        createFurnitureEntity(wallGeometryT1, wallMaterial, -500, -1325, false)
+        createFurnitureEntity(wallGeometryT2, wallMaterial, -500, -500, false)
+        createFurnitureEntity(wallGeometryT3, wallMaterial, -1375, -285, false)
+
+        createFurnitureEntity(wallGeometryB1, wallMaterial, -1660, 180, false)
+        createFurnitureEntity(wallGeometryB2, wallMaterial, -485, 770, true)
+        createFurnitureEntity(wallGeometryB3, wallMaterial, -985, 270, true)
+        createFurnitureEntity(wallGeometryB4, wallMaterial, -400, 1175, false)
+
+
+
+
+
+        // Table
+        var tableGeometrySquare = new THREE.BoxGeometry(200, 100, 200);
+        var tableGeometryLong = new THREE.BoxGeometry(400, 100, 150);
+        var tableGeometryLongBig = new THREE.BoxGeometry(1000, 100, 150);
+        var tableMaterial = new THREE.MeshBasicMaterial({
+            color: 0x555555,
+            wireframe: false
+        });
+
+        var tablePositions = [
+            [0, 150, tableGeometrySquare, false], // Main room, square tables, top
+            [700, 150, tableGeometrySquare, false],
+            [1400, 150, tableGeometrySquare, false],
+
+            [0, 1000, tableGeometrySquare, false], // Main room, square tables, bottom
+            [700, 1000, tableGeometrySquare, false],
+            [1400, 1000, tableGeometrySquare, false],
+
+            [350, 575, tableGeometryLong, false], // Main room, long tables
+            [1050, 575, tableGeometryLong, false],
+
+            [-1400, -1200, tableGeometryLongBig, false], // Top room
+            [-1400, -600, tableGeometryLongBig, false],
+
+            [-770, 1120, tableGeometrySquare, true], // Bottom room
+            [-1170, 720, tableGeometrySquare, true],
+            [-1570, 1120, tableGeometrySquare, true],
+            [-1970, 720, tableGeometrySquare, true],
+
+        ]
+        tablePositions.forEach(function (tablePosition) {
+            console.log(tablePosition)
+            createFurnitureEntity(tablePosition[2], tableMaterial, tablePosition[0], tablePosition[1],
+                tablePosition[3])
+        })
+    }
+
     function init(element) {
         container = document.getElementById(element);
-        camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 50000);
+        camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, params.size.x * 10);
         scene = new THREE.Scene();
 
         renderer = new THREE.WebGLRenderer({
@@ -176,13 +286,13 @@
         renderer.domElement.style.top = 0;
         container.appendChild(renderer.domElement);
 
-        camera.position.set(0, 10000, 10000);
+        camera.position.set(0, params.size.x * 2, params.size.z * 2);
         camera.lookAt(new THREE.Vector3(0, 0, 0));
 
         controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.maxPolarAngle = Math.PI * 0.5;
         controls.minDistance = 100;
-        controls.maxDistance = 30000;
+        controls.maxDistance = 20000;
 
         stats = new Stats();
         stats.domElement.style.position = 'absolute';
@@ -196,14 +306,14 @@
 
         //Lights
         var spotLight = new THREE.SpotLight(0xffffff, 5.0);
-        spotLight.position.set(0, 5000, 0);
+        spotLight.position.set(0, params.size.x, 0);
         spotLight.castShadow = true;
         spotLight.shadow.mapSize.width = 1024;
         spotLight.shadow.mapSize.height = 1024;
         spotLight.angle = 1;
         spotLight.penumbra = 0.5;
         spotLight.decay = 2;
-        spotLight.distance = 10000;
+        spotLight.distance = params.size.x * 2;
 
 
         var ambient = new THREE.AmbientLight(0xFFFFFF);
@@ -212,7 +322,7 @@
         scene.add(ambient);
 
         // Floor
-        var floorGeometry = new THREE.CubeGeometry(10000, 10000, 1, 32);
+        var floorGeometry = new THREE.CubeGeometry(params.size.x * 2, params.size.z * 2, 1, 32);
         var floorMaterial = new THREE.MeshPhongMaterial({
             color: 0x4DA6FF
         });
@@ -221,111 +331,167 @@
         floor.rotation.x = -Math.PI * .5;
         scene.add(floor);
 
+        var toiletGeometry = new THREE.CubeGeometry(500, 500, 1, 32);
+        var toiletMaterial = new THREE.MeshPhongMaterial({
+            color: 0xFFA64D
+        });
+        var toilet1 = new THREE.Mesh(toiletGeometry, toiletMaterial);
+        toilet1.receiveShadow = true;
+        toilet1.rotation.x = -Math.PI * .5;
+        toilet1.position.set(2500, 0, 200);
+        scene.add(toilet1);
+
+        var toilet1 = new THREE.Mesh(toiletGeometry, toiletMaterial);
+        toilet1.receiveShadow = true;
+        toilet1.rotation.x = -Math.PI * .5;
+        toilet1.position.set(-2500, 0, -50);
+        scene.add(toilet1);
+
+        loadFurniture()
+
+
 
 
         path = []
         flags = []
         arrows = []
 
-        params = {
-            maxSpeed: 6,
-            maxForce: 3,
-            numEntities: 5,
-            thresholdRadius: 200,
-            loop: false,
-            avoidDistance: 100
-        }
+
 
 
 
         // Entities
         entities = []
-        for (var i = 0; i < params.numEntities; i++) {
+        var entityPositions = [
+            [-1800, -1350], // Top room, top table
+            [-1600, -1350],
+            [-1400, -1350],
+            [-1200, -1350],
+            [-1000, -1350],
+            [-1800, -1050],
+            [-1600, -1050],
+            [-1400, -1050],
+            [-1200, -1050],
+            [-1000, -1050],
+
+            [-1800, -750], // Top room, top table
+            [-1600, -750],
+            [-1400, -750],
+            [-1200, -750],
+            [-1000, -750],
+            [-1800, -450],
+            [-1600, -450],
+            [-1400, -450],
+            [-1200, -450],
+            [-1000, -450],
+
+            [-2100, 600], // Bottom room, top left table
+            [-2100, 850],
+            [-1850, 600],
+            [-1850, 850],
+
+            [-1300, 600], // Bottom room, top right table
+            [-1300, 850],
+            [-1050, 600],
+            [-1050, 850],
+
+            [-1700, 1000], // Bottom room, bottom left table
+            [-1700, 1250],
+            [-1450, 1000],
+            [-1450, 1250],
+
+            [-900, 1000], // Bottom room, bottom right table
+            [-900, 1250],
+            [-650, 1000],
+            [-650, 1250],
+
+            [-150, 150], // Main room, square tables, top left
+            [0, 0],
+            [150, 150],
+            [0, 300],
+
+            [-150, 1000], // Main room, square tables, bottom left
+            [0, 850],
+            [150, 1000],
+            [0, 1150],
+
+            [550, 150], // Main room, square tables, top middle
+            [700, 0],
+            [850, 150],
+            [700, 300],
+
+            [550, 1000], // Main room, square tables, bottom middle
+            [700, 850],
+            [850, 1000],
+            [700, 1150],
+
+            [1250, 150], // Main room, square tables, top right
+            [1400, 0],
+            [1550, 150],
+            [1400, 300],
+
+            [1250, 1000], // Main room, square tables, bottom right
+            [1400, 850],
+            [1550, 1000],
+            [1400, 1150],
+
+            [350, 575], // Main room, long tables, left
+            // not finished
+
+            [1050, 575], // Main room, long tables, right
+            // not finished
+        ]
+        entityPositions.forEach(function (position) {
             var randomChar = Math.floor(Math.random() * ((2 - 0) + 1) + 0);
-            var clone = new THREE.SEA3D.SkinnedMesh(characters[randomChar].mesh.geometry, characters[randomChar].mesh.material)
+            var clone = new THREE.SEA3D.SkinnedMesh(characters[randomChar].mesh.geometry,
+                characters[
+                    randomChar].mesh.material)
             for (var j = 0; j < animations.length; j++) {
                 clone.animations.push(animations[j].data);
                 clone.clips.push(animations[j].data);
                 clone.animationsData[j] = animations[j].data;
             }
-
             clone.rotateY(Math.PI)
             clone.scale.set(1, 1, 1)
             clone.castShadow = true;
-            var entity = new SteeringEntity(clone);
-            entity.position.set(Math.random() * (5000 - (-5000)) + (-5000), 0, Math.random() * (5000 - (-5000)) + (-
-                5000));
+            var entity = new SteeringEntity(clone)
+            entity.position.set(position[0], 0, position[1]);
             entities.push(entity);
             scene.add(entity);
+        })
 
-        }
-
-        // furniture = []
-        // Bar
-        // var barGeometry = new THREE.BoxGeometry(100, 200, 50);
-        // var barMaterial = new THREE.MeshBasicMaterial({
-        //     color: 0xFFFFFF,
-        //     wireframe: true
-        // });
-        // var bar = new THREE.Mesh(barGeometry, barMaterial);
-        // bar.position.set(Math.random() * (5000 - (-5000)) + (-5000), 0, Math.random() * (5000 - (-5000)) + (-5000));
-        // scene.add(bar)
-        // entities.push(bar)
 
 
         //Plane boundaries (do not cross)
-        boundaries = new THREE.Box3(new THREE.Vector3(-5000, 0, -5000), new THREE.Vector3(5000, 0, 5000));
+        boundaries = new THREE.Box3(new THREE.Vector3(-params.size.x, 0, -params.size.z), new THREE.Vector3(params.size
+            .x, 0,
+            params.size.z));
 
-        //Plane boundaries (do not cross)
-        boundaries = new THREE.Box3(new THREE.Vector3(-5000, 0, -5000), new THREE.Vector3(5000, 0, 5000));
 
         //Gui
         var gui = new dat.GUI();
 
-        var quantity = gui.add(params, 'numEntities', 1, 100).name("Num Of Entities");
-        quantity.onFinishChange(function (value) {
-            for (var i = 0; i < entities.length; i++) {
-                entities[i].mesh.traverse(function (obj) {
-                    scene.remove(obj);
-                    if (obj.geometry)
-                        obj.geometry.dispose();
-                    if (obj.material)
-                        obj.material.dispose();
-                    if (obj.mesh)
-                        obj.mesh.dispose();
-                    if (obj.texture)
-                        obj.texture.dispose();
+        // var quantity = gui.add(params, 'numEntities', 1, 100).name("Num Of Entities");
+        // quantity.onFinishChange(function (value) {
+        //     for (var i = 0; i < entities.length; i++) {
+        //         entities[i].mesh.traverse(function (obj) {
+        //             scene.remove(obj);
+        //             if (obj.geometry)
+        //                 obj.geometry.dispose();
+        //             if (obj.material)
+        //                 obj.material.dispose();
+        //             if (obj.mesh)
+        //                 obj.mesh.dispose();
+        //             if (obj.texture)
+        //                 obj.texture.dispose();
 
-                });
-                scene.remove(entities[i])
+        //         });
+        //         scene.remove(entities[i])
 
-            }
+        //     }
 
-            entities = []
 
-            for (var i = 0; i < value; i++) {
-
-                var randomChar = Math.floor(Math.random() * ((2 - 0) + 1) + 0);
-                var clone = new THREE.SEA3D.SkinnedMesh(characters[randomChar].mesh.geometry, characters[
-                    randomChar].mesh.material)
-                for (var j = 0; j < animations.length; j++) {
-                    clone.animations.push(animations[j].data);
-                    clone.clips.push(animations[j].data);
-                    clone.animationsData[j] = animations[j].data;
-                }
-
-                clone.rotateY(Math.PI)
-                clone.scale.set(1, 1, 1)
-                clone.castShadow = true;
-
-                var entity = new SteeringEntity(clone)
-                entity.position.set(Math.random() * (5000 - (-5000)) + (-5000), 0, Math.random() * (5000 - (-
-                    5000)) + (-5000));
-                entities.push(entity);
-                scene.add(entity);
-
-            }
-        });
+        // });
 
 
         gui.add(params, 'maxSpeed', 2, 20).name('Max Speed').step(1);
@@ -333,6 +499,7 @@
         gui.add(params, 'thresholdRadius', 10, 500).name('Threshold Radius').step(1);
         gui.add(params, 'avoidDistance', 10, 2000).name('Avoid Distance').step(1);
         gui.add(params, 'loop').name('Loop');
+        gui.add(params, 'avoid').name('Avoid');
 
         window.addEventListener('resize', onWindowResize, false);
         document.addEventListener('mousedown', onClick, true);
@@ -408,9 +575,11 @@
             if (path.length > 0) {
                 entities[i].followPath(path, params.loop, params.thresholdRadius);
                 entities[i].lookWhereGoing(true)
-                entities[i].avoidDistance = params.avoidDistance;
-                entities[i].avoid(entities)
-                // entities[i].avoid(furniture)
+                if (params.avoid) {
+                    entities[i].avoidDistance = params.avoidDistance;
+                    entities[i].avoid(entities)
+                    entities[i].avoid(furniture)
+                }
             } else {
                 entities[i].idle()
             }
