@@ -13,6 +13,7 @@
     <script src="/js/threejs/sea3d/SEA3DLoader.js"></script>
     <script src="/js/threejs/controls/OrbitControls.js"></script>
     <script src="/js/ThreeSteer.js"></script>
+    <script src="/js/entity-positions.js"></script>
     <link rel="stylesheet" type="text/css" href="/css/main.css" />
     <link rel="stylesheet" type="text/css" href="/css/gui.css" />
 </head>
@@ -87,6 +88,8 @@
         }
     }
 
+    var clickHistory = []
+
     function onClick(event) {
         var mouse3D = new THREE.Vector3((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) *
             2 + 1, 0);
@@ -95,7 +98,12 @@
         var intersects = raycaster.intersectObjects(scene.children);
         if (intersects.length > 0) {
             var point = new THREE.Vector3(intersects[0].point.x, entities[0].position.y, intersects[0].point.z)
-            console.log('x: ' + Number(intersects[0].point.x) + ' , y: ' + intersects[0].point.z)
+            console.log('x: ' + Math.round(intersects[0].point.x) + ' , y: ' + Math.round(intersects[0].point.z))
+            clickHistory.push({
+                x: Math.round(intersects[0].point.x),
+                z: Math.round(intersects[0].point.z)
+            })
+            console.log(JSON.stringify(clickHistory))
             if (event.altKey) {
                 addFlag(point)
                 path.push(point)
@@ -261,7 +269,6 @@
 
         ]
         tablePositions.forEach(function (tablePosition) {
-            console.log(tablePosition)
             createFurnitureEntity(tablePosition[2], tableMaterial, tablePosition[0], tablePosition[1],
                 tablePosition[3])
         })
@@ -362,95 +369,8 @@
 
         // Entities
         entities = []
-        var entityPositions = [
-            [-1800, -1350], // Top room, top table
-            [-1600, -1350],
-            [-1400, -1350],
-            [-1200, -1350],
-            [-1000, -1350],
-            [-1800, -1050],
-            [-1600, -1050],
-            [-1400, -1050],
-            [-1200, -1050],
-            [-1000, -1050],
-
-            [-1800, -750], // Top room, top table
-            [-1600, -750],
-            [-1400, -750],
-            [-1200, -750],
-            [-1000, -750],
-            [-1800, -450],
-            [-1600, -450],
-            [-1400, -450],
-            [-1200, -450],
-            [-1000, -450],
-
-            [-2100, 600], // Bottom room, top left table
-            [-2100, 850],
-            [-1850, 600],
-            [-1850, 850],
-
-            [-1300, 600], // Bottom room, top right table
-            [-1300, 850],
-            [-1050, 600],
-            [-1050, 850],
-
-            [-1700, 1000], // Bottom room, bottom left table
-            [-1700, 1250],
-            [-1450, 1000],
-            [-1450, 1250],
-
-            [-900, 1000], // Bottom room, bottom right table
-            [-900, 1250],
-            [-650, 1000],
-            [-650, 1250],
-
-            [-150, 150], // Main room, square tables, top left
-            [0, 0],
-            [150, 150],
-            [0, 300],
-
-            [-150, 1000], // Main room, square tables, bottom left
-            [0, 850],
-            [150, 1000],
-            [0, 1150],
-
-            [550, 150], // Main room, square tables, top middle
-            [700, 0],
-            [850, 150],
-            [700, 300],
-
-            [550, 1000], // Main room, square tables, bottom middle
-            [700, 850],
-            [850, 1000],
-            [700, 1150],
-
-            [1250, 150], // Main room, square tables, top right
-            [1400, 0],
-            [1550, 150],
-            [1400, 300],
-
-            [1250, 1000], // Main room, square tables, bottom right
-            [1400, 850],
-            [1550, 1000],
-            [1400, 1150],
-
-            [250, 450], // Main room, long tables, left
-            [450, 450],
-            [100, 575],
-            [600, 575],
-            [250, 700],
-            [450, 700],
-
-            [950, 450], // Main room, long tables, right
-            [1150, 450],
-            [800, 575],
-            [1300, 575],
-            [950, 700],
-            [1150, 700],
-
-        ]
-        entityPositions.forEach(function (position) {
+        //entityPositions loaded from entity-positions.js
+        entityPositions.forEach(function (entityPosition) {
             var randomChar = Math.floor(Math.random() * ((2 - 0) + 1) + 0);
             var clone = new THREE.SEA3D.SkinnedMesh(characters[randomChar].mesh.geometry,
                 characters[
@@ -464,7 +384,7 @@
             clone.scale.set(1, 1, 1)
             clone.castShadow = true;
             var entity = new SteeringEntity(clone)
-            entity.position.set(position[0], 0, position[1]);
+            entity.position.set(entityPosition.origin.x, 0, entityPosition.origin.z);
             entities.push(entity);
             scene.add(entity);
         })
