@@ -74,3 +74,6 @@ typings/
 
 .secrets.sh
 .DS_Store
+
+# Don't store generated training data
+training-data*

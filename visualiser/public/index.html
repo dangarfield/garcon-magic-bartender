@@ -4,18 +4,19 @@
 <head>
     <meta charset="UTF-8">
     <title>Garcon - Magic Bartender - Visualiser</title>
-    <script src="/libs/dat.gui.min.js"></script>
-    <script src="/libs/stats.min.js"></script>
-    <script src="/libs/three.min.js"></script>
-    <script src="/js/threejs/sea3d/SEA3D.js"></script>
-    <script src="/js/threejs/sea3d/SEA3DLZMA.js"></script>
-    <script src="/js/threejs/sea3d/SEA3DLoader.js"></script>
-    <script src="/js/threejs/controls/OrbitControls.js"></script>
-    <script src="/js/ThreeSteer.js"></script>
-    <script src="/js/entity-positions.js"></script>
-    <script src="/js/entity-profiles.js"></script>
-    <link rel="stylesheet" type="text/css" href="/css/main.css" />
-    <link rel="stylesheet" type="text/css" href="/css/gui.css" />
+    <script src="/public/js/libs/dat.gui.min.js"></script>
+    <script src="/public/js/libs/stats.min.js"></script>
+    <script src="/public/js/libs/three.min.js"></script>
+    <script src="/public/js/libs/socket.io.slim.js"></script>
+    <script src="/public/js/threejs/sea3d/SEA3D.js"></script>
+    <script src="/public/js/threejs/sea3d/SEA3DLZMA.js"></script>
+    <script src="/public/js/threejs/sea3d/SEA3DLoader.js"></script>
+    <script src="/public/js/threejs/controls/OrbitControls.js"></script>
+    <script src="/public/js/ThreeSteer.js"></script>
+    <script src="/public/js/entity-positions.js"></script>
+    <script src="/public/js/entity-profiles.js"></script>
+    <link rel="stylesheet" type="text/css" href="/public/css/main.css" />
+    <link rel="stylesheet" type="text/css" href="/public/css/gui.css" />
 </head>
 <script>
     var container;
@@ -38,39 +39,39 @@
     var characters = [{
             index: 0,
             name: "white",
-            url: "/models/avatar_white.tjs.sea"
+            url: "/public/models/avatar_white.tjs.sea"
         },
         {
             index: 1,
             name: "red",
-            url: "/models/avatar_red.tjs.sea"
+            url: "/public/models/avatar_red.tjs.sea"
         },
         {
             index: 2,
             name: "black",
-            url: "/models/avatar_black.tjs.sea"
+            url: "/public/models/avatar_black.tjs.sea"
         }
     ];
 
     var animations = [{
             index: 0,
             name: "idle",
-            url: "/models/animations/idle.tjs.sea"
+            url: "/public/models/animations/idle.tjs.sea"
         },
         {
             index: 1,
             name: "walk",
-            url: "/models/animations/walk.tjs.sea"
+            url: "/public/models/animations/walk.tjs.sea"
         },
         {
             index: 2,
             name: "jog",
-            url: "/models/animations/jog.tjs.sea"
+            url: "/public/models/animations/jog.tjs.sea"
         },
         {
             index: 3,
             name: "run",
-            url: "/models/animations/run.tjs.sea"
+            url: "/public/models/animations/run.tjs.sea"
         }
     ];
 
@@ -95,6 +96,7 @@
     }
 
 
+    var socket = io.connect('http://localhost:5100');
 
     var clickHistory = []
 
@@ -398,6 +400,7 @@
             entity.action = {}
             entity.action.type = 'idle' //toBar, atBar, fromBar, toToilet, atToilet, fromToilet, toSmoke, atToilet, fromSmoke
             entity.action.drink = '' //beer, whiteWine, redWine, water, coke
+            entity.action.positionList = []
             entityActionInit(entity, true)
             entities.push(entity)
             scene.add(entity)
@@ -419,11 +422,11 @@
         var drink = action === 'bar' ? getWeightedRandom(entity.profile.drink) : ''
 
         // Get a waiting time from entity.profile.waiting
-        var waitingTime = entity.profile.waiting[action]
+        var waitingTime = entity.profile.waiting[action] * 1000
 
         // Adjust waiting time with a level of random, ( for initial time only ?)
         if (initial) {
-            waitingTime = randomIntFromRange(1 * 1000, waitingTime * 1000)
+            waitingTime = randomIntFromRange(1 * 1000, waitingTime)
         }
         console.log('Entity:', entity.name, 'Init:', action, type, drink, waitingTime)
         // Add a timeout to bind to the waiting time to add the action
@@ -498,20 +501,13 @@
         controls.minDistance = 100;
         controls.maxDistance = 20000;
 
-        stats = new Stats();
-        stats.domElement.style.position = 'absolute';
-        stats.domElement.style.top = null;
-        stats.domElement.style.bottom = '20px';
-        stats.domElement.style.left = '20px'
+        stats = new Stats()
+        stats.domElement.style.position = 'absolute'
+        stats.domElement.style.top = '20px'
+        stats.domElement.style.left = null
+        stats.domElement.style.right = '280px'
         stats.domElement.style.zIndex = 100;
         document.body.appendChild(stats.domElement);
-
-        // var stats = new THREEx.RendererStats()
-        // stats.domElement.style.position = 'absolute'
-        // stats.domElement.style.left = '0px'
-        // stats.domElement.style.bottom = '0px'
-        // document.body.appendChild(rendererStats.domElement)
-
 
         clock = new THREE.Clock();
 
@@ -695,8 +691,41 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    function animate() {
+    var frameNo = 0
 
+    function broadcastPositionData(entity) {
+        var positionList = entity.action.positionList
+
+        var location
+        var drink = entity.action.drink
+        if (entity.action.type === 'toBar') {
+            location = 'bar'
+        } else if (entity.action.type === 'toToilet') {
+            location = 'toilet'
+        } else if (entity.action.type === 'toSmoke') {
+            location = 'smoke'
+        }
+        entity.action.positionList = []
+        var data = {
+            id: entity._id,
+            name: entity.name,
+            positions: positionList,
+            location: location,
+            drink: drink
+        }
+        console.log('Entity:', entity.name, 'broadcastPositionData', data)
+        //TODO - Send this to server to generate training data
+        socket.emit('finishedJourney', data);
+    }
+
+    function animate() {
+        frameNo++
+        var capturePositionData = false
+        if (frameNo >= 60) {
+            console.log('60 frames')
+            frameNo = 0
+            capturePositionData = true
+        }
         requestAnimationFrame(animate);
 
 
@@ -713,12 +742,18 @@
             entity.setAnimation()
 
             if (entity.action.path && entity.action.path.length > 0) {
-                entity.followPathAndReturn(entity.action.path, params.loop, params.thresholdRadius);
+                entity.followPathAndReturn(entity.action.path, params.loop, params.thresholdRadius, function () {
+                    broadcastPositionData(entity)
+                });
                 entity.lookWhereGoing(true)
                 if (params.avoid) {
                     entity.avoidDistance = params.avoidDistance;
                     entity.avoid(entities)
                     entity.avoid(furniture)
+                }
+                if (capturePositionData) {
+                    entity.action.positionList.push([Math.floor(entity.position.x), Math.floor(entity.position.z)])
+                    console.log('Entity:', entity.name, 'entity.action.positionList:', entity.action.positionList)
                 }
             } else {
                 entity.idle()
@@ -745,7 +780,7 @@
         else if (this.velocity.length() > 12)
             this.mesh.play(4, 0.5) //Run
     }
-    SteeringEntity.prototype.followPathAndReturn = function (path, loop, thresholdRadius = 1) {
+    SteeringEntity.prototype.followPathAndReturn = function (path, loop, thresholdRadius = 1, arrivalCallBack) {
         var wayPoint = path[this.pathIndex]
         if (wayPoint == null)
             return;
@@ -763,6 +798,7 @@
                         status: 'waiting'
                     })
                     renderBarQueue()
+                    arrivalCallBack()
                 } else if (this.action.type === 'toToilet') {
                     this.action.type === 'atToilet'
                     var idleTime = 20
@@ -773,6 +809,7 @@
                         entity.action.path = getPath(entity, entity.action.type)
                         console.log('Entity:', entity.name, 'Return:', entity.action.type)
                     }, idleTime);
+                    arrivalCallBack()
                 } else if (this.action.type === 'toSmoke') {
                     this.action.type === 'atSmoke'
                     var idleTime = 30
@@ -783,6 +820,10 @@
                         entity.action.path = getPath(entity, entity.action.type)
                         console.log('Entity:', entity.name, 'Return:', entity.action.type)
                     }, idleTime);
+                    arrivalCallBack()
+                } else if (this.action.type === 'fromBar' || this.action.type === 'fromToilet' || this.action.type ===
+                    'fromSmoke') {
+                    entityActionInit(this, false)
                 }
 
 
