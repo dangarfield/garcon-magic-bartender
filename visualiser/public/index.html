@@ -722,7 +722,6 @@
         frameNo++
         var capturePositionData = false
         if (frameNo >= 60) {
-            console.log('60 frames')
             frameNo = 0
             capturePositionData = true
         }
@@ -753,7 +752,7 @@
                 }
                 if (capturePositionData) {
                     entity.action.positionList.push([Math.floor(entity.position.x), Math.floor(entity.position.z)])
-                    console.log('Entity:', entity.name, 'entity.action.positionList:', entity.action.positionList)
+                    // console.log('Entity:', entity.name, 'entity.action.positionList:', entity.action.positionList)
                 }
             } else {
                 entity.idle()
