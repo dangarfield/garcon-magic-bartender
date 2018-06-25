@@ -106,6 +106,7 @@
             var order = barQueue[0]
             if (order.status == 'waiting') {
                 order.status = 'serving'
+                renderBarQueue()
             } else if (order.status == 'serving') {
                 order.status = 'DONE'
                 var entity = entities[order.id]
@@ -118,11 +119,27 @@
                 if (barQueue.length > 0) {
                     barQueue[0].status = 'serving'
                 }
+                renderBarQueue()
             }
         }
     }
-
     setInterval(processBarQueue, 3000)
+
+    function renderBarQueue() {
+        var queueParent = document.getElementById('barQueue');
+        var oldQueue = document.getElementById('barQueueItems');
+        var newQueue = document.createElement('div')
+        newQueue.id = 'barQueueItems'
+
+        barQueue.forEach(function (item) {
+            var p = document.createElement('p')
+            p.textContent = 'ID: ' + item.id + ' Name: ' + item.name + ' Drink: ' + item.drink + ' Status: ' +
+                item.status
+            newQueue.appendChild(p)
+        })
+        queueParent.removeChild(oldQueue);
+        queueParent.appendChild(newQueue);
+    }
 
     function LCG(seed) {
         function lcg(a) {
@@ -483,10 +500,18 @@
 
         stats = new Stats();
         stats.domElement.style.position = 'absolute';
-        stats.domElement.style.bottom = '0px';
-        stats.domElement.style.left = '180px'
+        stats.domElement.style.top = null;
+        stats.domElement.style.bottom = '20px';
+        stats.domElement.style.left = '20px'
         stats.domElement.style.zIndex = 100;
-        container.appendChild(stats.domElement);
+        document.body.appendChild(stats.domElement);
+
+        // var stats = new THREEx.RendererStats()
+        // stats.domElement.style.position = 'absolute'
+        // stats.domElement.style.left = '0px'
+        // stats.domElement.style.bottom = '0px'
+        // document.body.appendChild(rendererStats.domElement)
+
 
         clock = new THREE.Clock();
 
@@ -737,6 +762,7 @@
                         drink: this.action.drink,
                         status: 'waiting'
                     })
+                    renderBarQueue()
                 } else if (this.action.type === 'toToilet') {
                     this.action.type === 'atToilet'
                     var idleTime = 20
@@ -773,15 +799,11 @@
 
 <body onload="loadModels()">
     <div id="container"></div>
-    <div id="msg">
-        <span style="color:#BFFF00; font-weight: bold">PATH FOLLOW:</span>
-        <br>ALT + Click to add points to path.
-        <br>CTRL + Click to reset.</div>
-
+    <div id="barQueue">
+        <h3>Bar Queue</h3>
+        <div id="barQueueItems"></div>
+    </div>
     <div id="loading-msg"></div>
-    <a href="https://github.com/erosmarcon/three-steer/blob/master/examples/animated/PathFollow.html" target="_blank">
-        <div class="view-source">View source</div>
-    </a>
 </body>
 
 </html>

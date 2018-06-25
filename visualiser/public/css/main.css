@@ -1,36 +1,31 @@
-@font-face
-{
+@font-face {
     font-family: 'opensans';
     src: url('../assets/fonts/open-sans/open-sans-v13-latin-regular.woff2') format('woff2'), url('../assets/fonts/open-sans/open-sans-v13-latin-regular.woff') format('woff');
     font-weight: normal;
     font-style: normal;
 }
 
-@font-face
-{
+@font-face {
     font-family: 'opensans-bold';
     src: url('../assets/fonts/open-sans/open-sans-v13-latin-700.woff2') format('woff2'), url('../assets/fonts/open-sans/open-sans-v13-latin-700.woff') format('woff');
     font-weight: normal;
     font-style: normal;
 }
 
-body
-{
-    color:#FFFFFF;
+body {
+    color: #FFFFFF;
     background-color: #333333;
     margin: 0;
     overflow: hidden;
-    padding:0;
-    height:100%;
+    padding: 0;
+    height: 100%;
 }
 
-a
-{
-    color:#FFFFFF;
+a {
+    color: #FFFFFF;
 }
 
-.view-source
-{
+.view-source {
     font-family: 'opensans';
     right: 20px;
     bottom: 20px;
@@ -43,38 +38,41 @@ a
     cursor: hand;
 }
 
-.view-source:hover
-{
+.view-source:hover {
     background-color: rgba(0, 0, 0, 0.2);
-    color:#BCFF00;
+    color: #BCFF00;
 }
 
-#container
-{
+#container {
     position: absolute;
 }
 
-#loading-msg
-{
+#loading-msg {
     font-family: 'opensans-bold';
     position: absolute;
-    font-size:11px;
-    top:50%;
+    font-size: 11px;
+    top: 50%;
     width: 100%;
     text-align: center;
-    color:#BCFF00;
+    color: #BCFF00;
 }
 
-#msg
-{
+#barQueue {
     font-family: 'opensans';
-    left:200px;
-    bottom: 20px;
+    left: 20px;
+    top: 0px;
     position: absolute;
-    font-size:11px;
-    width:300px;
-
+    font-size: 11px;
+    width: 300px;
 }
 
+#barQueue h3 {
+    color: #BFFF00;
+    font-weight: bold;
+}
 
-
+#gui {
+    position: absolute;
+    bottom: 20px;
+    left: 20px
+}
