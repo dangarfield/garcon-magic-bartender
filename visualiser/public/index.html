@@ -77,17 +77,35 @@
         maxSpeed: 5,
         maxForce: 3,
         numEntities: 72,
-        thresholdRadius: 200,
+        thresholdRadius: 10,
         loop: false,
-        avoid: true,
+        avoid: false,
         avoidDistance: 10,
         size: {
             x: 2250,
             z: 1500
-        }
+        },
+        toBar: false,
+        fromBar: false,
+        toToilet: false,
+        fromToilet: false,
+        toSmoke: false,
+        fromSmoke: false
     }
 
     var clickHistory = []
+
+    function LCG(seed) {
+        function lcg(a) {
+            return a * 48271 % 2147483647;
+        };
+        seed = seed ? lcg(seed) : lcg(Math.random())
+        return function () {
+            return (seed = lcg(seed)) / 2147483648
+        }
+    }
+
+    var rand = LCG(135)
 
     function onClick(event) {
         var mouse3D = new THREE.Vector3((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) *
@@ -370,7 +388,7 @@
         entities = []
         //entityPositions loaded from entity-positions.js
         entityPositions.forEach(function (entityPosition) {
-            var randomChar = Math.floor(Math.random() * ((2 - 0) + 1) + 0);
+            var randomChar = Math.floor(rand() * ((2 - 0) + 1) + 0);
             var clone = new THREE.SEA3D.SkinnedMesh(characters[randomChar].mesh.geometry,
                 characters[
                     randomChar].mesh.material)
@@ -392,8 +410,31 @@
                 entity.paths.toBar.push(xZToPoint(path))
             })
             entity.paths.toBar.push(xZToPoint(fixedPositions.bar))
+
             entity.paths.fromBar = entity.paths.toBar.slice(0);
-            entity.paths.fromBar.reverse()
+            entity.paths.fromBar = entity.paths.fromBar.reverse()
+
+
+            entity.paths.toToilet = []
+            entity.paths.toToilet.push(xZToPoint(entityPosition.origin))
+            entityPosition.toilet.forEach(function (path) {
+                entity.paths.toToilet.push(xZToPoint(path))
+            })
+            entity.paths.toToilet.push(xZToPoint(fixedPositions.toilet))
+
+            entity.paths.fromToilet = entity.paths.toToilet.slice(0);
+            entity.paths.fromToilet = entity.paths.fromToilet.reverse()
+
+
+            entity.paths.toSmoke = []
+            entity.paths.toSmoke.push(xZToPoint(entityPosition.origin))
+            entityPosition.smoke.forEach(function (path) {
+                entity.paths.toSmoke.push(xZToPoint(path))
+            })
+            entity.paths.toSmoke.push(xZToPoint(fixedPositions.smoke))
+
+            entity.paths.fromSmoke = entity.paths.toSmoke.slice(0);
+            entity.paths.fromSmoke = entity.paths.fromSmoke.reverse()
 
             // TODO add other paths for toToilet, fromToilet, toSmoke, fromSmoke
             // TODO - Then demo by adding config to dat.gui to test travelling
@@ -442,6 +483,30 @@
         gui.add(params, 'loop').name('Loop');
         gui.add(params, 'avoid').name('Avoid');
 
+        var toBarGui = gui.add(params, 'toBar').name('To Bar');
+        toBarGui.onFinishChange(function (value) {
+            reset()
+        })
+        var fromBarGui = gui.add(params, 'fromBar').name('From Bar');
+        fromBarGui.onFinishChange(function (value) {
+            reset()
+        })
+        var toToiletGui = gui.add(params, 'toToilet').name('To Toilet');
+        toToiletGui.onFinishChange(function (value) {
+            reset()
+        })
+        var fromToiletGui = gui.add(params, 'fromToilet').name('From Toilet');
+        fromToiletGui.onFinishChange(function (value) {
+            reset()
+        })
+        var toSmokeGui = gui.add(params, 'toSmoke').name('To Smoke');
+        toSmokeGui.onFinishChange(function (value) {
+            reset()
+        })
+        var fromSmokeGui = gui.add(params, 'fromSmoke').name('From Smoke');
+        fromBarGui.onFinishChange(function (value) {
+            reset()
+        })
         window.addEventListener('resize', onWindowResize, false);
         document.addEventListener('mousedown', onClick, true);
         animate();
@@ -517,8 +582,22 @@
 
             entities[i].setAnimation()
 
-            if (path.length > 0) {
-                entities[i].followPath(path, params.loop, params.thresholdRadius);
+            if (params.toBar || params.fromBar || params.toToilet || params.fromToilet || params.toSmoke || params.fromSmoke) {
+                var pathToFollow
+                if (params.toBar) {
+                    pathToFollow = entities[i].paths.toBar
+                } else if (params.fromBar) {
+                    pathToFollow = entities[i].paths.fromBar
+                } else if (params.toToilet) {
+                    pathToFollow = entities[i].paths.toToilet
+                } else if (params.fromToilet) {
+                    pathToFollow = entities[i].paths.fromToilet
+                } else if (params.toSmoke) {
+                    pathToFollow = entities[i].paths.toSmoke
+                } else if (params.fromSmoke) {
+                    pathToFollow = entities[i].paths.fromSmoke
+                }
+                entities[i].followPath(pathToFollow, params.loop, params.thresholdRadius);
                 entities[i].lookWhereGoing(true)
                 if (params.avoid) {
                     entities[i].avoidDistance = params.avoidDistance;
