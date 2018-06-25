@@ -13,6 +13,7 @@
     <script src="/js/threejs/controls/OrbitControls.js"></script>
     <script src="/js/ThreeSteer.js"></script>
     <script src="/js/entity-positions.js"></script>
+    <script src="/js/entity-profiles.js"></script>
     <link rel="stylesheet" type="text/css" href="/css/main.css" />
     <link rel="stylesheet" type="text/css" href="/css/gui.css" />
 </head>
@@ -77,7 +78,7 @@
         maxSpeed: 5,
         maxForce: 3,
         numEntities: 72,
-        thresholdRadius: 10,
+        thresholdRadius: 50,
         loop: false,
         avoid: false,
         avoidDistance: 10,
@@ -92,6 +93,8 @@
         toSmoke: false,
         fromSmoke: false
     }
+
+
 
     var clickHistory = []
 
@@ -212,7 +215,7 @@
         scene.add(entity);
     }
 
-    function loadFurniture() {
+    function initFurniture() {
         furniture = []
 
         // Bar
@@ -289,6 +292,139 @@
             createFurnitureEntity(tablePosition[2], tableMaterial, tablePosition[0], tablePosition[1],
                 tablePosition[3])
         })
+    }
+
+    function initEntities() {
+        // Entities
+        entities = []
+        //entityPositions loaded from entity-positions.js
+        entityPositions.forEach(function (entityPosition, i) {
+            var randomChar = Math.floor(rand() * ((2 - 0) + 1) + 0);
+            var clone = new THREE.SEA3D.SkinnedMesh(characters[randomChar].mesh.geometry,
+                characters[
+                    randomChar].mesh.material)
+            for (var j = 0; j < animations.length; j++) {
+                clone.animations.push(animations[j].data);
+                clone.clips.push(animations[j].data);
+                clone.animationsData[j] = animations[j].data;
+            }
+            clone.rotateY(Math.PI)
+            clone.scale.set(1, 1, 1)
+            clone.castShadow = true;
+            var entity = new SteeringEntity(clone)
+            entity.name = i
+            entity.position.set(entityPosition.origin.x, 0, entityPosition.origin.z);
+            entity.paths = {}
+
+            entity.paths.toBar = []
+            entity.paths.toBar.push(xZToPoint(entityPosition.origin))
+            entityPosition.bar.forEach(function (path) {
+                entity.paths.toBar.push(xZToPoint(path))
+            })
+            entity.paths.toBar.push(xZToPoint(fixedPositions.bar))
+
+            entity.paths.fromBar = entity.paths.toBar.slice(0);
+            entity.paths.fromBar = entity.paths.fromBar.reverse()
+
+
+            entity.paths.toToilet = []
+            entity.paths.toToilet.push(xZToPoint(entityPosition.origin))
+            entityPosition.toilet.forEach(function (path) {
+                entity.paths.toToilet.push(xZToPoint(path))
+            })
+            entity.paths.toToilet.push(xZToPoint(fixedPositions.toilet))
+
+            entity.paths.fromToilet = entity.paths.toToilet.slice(0);
+            entity.paths.fromToilet = entity.paths.fromToilet.reverse()
+
+
+            entity.paths.toSmoke = []
+            entity.paths.toSmoke.push(xZToPoint(entityPosition.origin))
+            entityPosition.smoke.forEach(function (path) {
+                entity.paths.toSmoke.push(xZToPoint(path))
+            })
+            entity.paths.toSmoke.push(xZToPoint(fixedPositions.smoke))
+
+            entity.paths.fromSmoke = entity.paths.toSmoke.slice(0);
+            entity.paths.fromSmoke = entity.paths.fromSmoke.reverse()
+
+            entity.profile = selectProfile(rand())
+            console.log(entity.profile.name)
+
+            entity.action = {}
+            entity.action.type = 'idle' //toBar, atBar, fromBar, toToilet, atToilet, fromToilet, toSmoke, atToilet, fromSmoke
+            entity.action.drink = '' //beer, whiteWine, redWine, water, coke
+            entityActionInit(entity, true)
+            entities.push(entity)
+            scene.add(entity)
+        })
+    }
+
+    function entityActionInit(entity, initial) {
+        // Get action from random and entity.profile.actionPropensity
+        var action = getWeightedRandom(entity.profile.actionPropensity)
+        var type = ''
+        if (action === 'bar') {
+            type = 'toBar'
+        } else if (action === 'toilet') {
+            type = 'toToilet'
+        } else if (action === 'smoke') {
+            type = 'toSmoke'
+        }
+        // If bar, get drink from random and entity.profile.drink
+        var drink = action === 'bar' ? getWeightedRandom(entity.profile.drink) : ''
+
+        // Get a waiting time from entity.profile.waiting
+        var waitingTime = entity.profile.waiting[action]
+
+        // Adjust waiting time with a level of random, ( for initial time only ?)
+        if (initial) {
+            waitingTime = randomIntFromRange(1 * 1000, waitingTime * 1000)
+        }
+        console.log('Entity:', entity.name, 'Init:', action, type, drink, waitingTime)
+        // Add a timeout to bind to the waiting time to add the action
+
+        setTimeout(function () {
+            console.log('Entity:', entity.name, 'Action:', action, type, drink)
+            entity.action.type = type
+            entity.action.drink = drink
+            entity.action.path = getPath(entity, type)
+            // Bind the arrival, wait and return action in animate loop
+        }, waitingTime);
+    }
+
+    function getPath(entity, type) {
+        var pathToFollow
+        if (type === 'toBar') {
+            pathToFollow = entity.paths.toBar
+        } else if (type === 'fromBar') {
+            pathToFollow = entity.paths.fromBar
+        } else if (type === 'toToilet') {
+            pathToFollow = entity.paths.toToilet
+        } else if (type === 'fromToilet') {
+            pathToFollow = entity.paths.fromToilet
+        } else if (type === 'toSmoke') {
+            pathToFollow = entity.paths.toSmoke
+        } else if (type === 'fromSmoke') {
+            pathToFollow = entity.paths.fromSmoke
+        }
+        return pathToFollow
+    }
+
+    function randomIntFromRange(min, max) {
+        return Math.floor(rand() * (max - min + 1) + min);
+    }
+
+    function getWeightedRandom(input) {
+        var array = [];
+        for (var item in input) {
+            if (input.hasOwnProperty(item)) {
+                for (var i = 0; i < input[item]; i++) {
+                    array.push(item);
+                }
+            }
+        }
+        return array[Math.floor(rand() * array.length)];
     }
 
     function init(element) {
@@ -371,7 +507,7 @@
         toilet1.position.set(-2500, 0, -50);
         scene.add(toilet1);
 
-        loadFurniture()
+        initFurniture()
 
 
 
@@ -382,66 +518,7 @@
 
 
 
-
-
-        // Entities
-        entities = []
-        //entityPositions loaded from entity-positions.js
-        entityPositions.forEach(function (entityPosition) {
-            var randomChar = Math.floor(rand() * ((2 - 0) + 1) + 0);
-            var clone = new THREE.SEA3D.SkinnedMesh(characters[randomChar].mesh.geometry,
-                characters[
-                    randomChar].mesh.material)
-            for (var j = 0; j < animations.length; j++) {
-                clone.animations.push(animations[j].data);
-                clone.clips.push(animations[j].data);
-                clone.animationsData[j] = animations[j].data;
-            }
-            clone.rotateY(Math.PI)
-            clone.scale.set(1, 1, 1)
-            clone.castShadow = true;
-            var entity = new SteeringEntity(clone)
-            entity.position.set(entityPosition.origin.x, 0, entityPosition.origin.z);
-            entity.paths = {}
-
-            entity.paths.toBar = []
-            entity.paths.toBar.push(xZToPoint(entityPosition.origin))
-            entityPosition.bar.forEach(function (path) {
-                entity.paths.toBar.push(xZToPoint(path))
-            })
-            entity.paths.toBar.push(xZToPoint(fixedPositions.bar))
-
-            entity.paths.fromBar = entity.paths.toBar.slice(0);
-            entity.paths.fromBar = entity.paths.fromBar.reverse()
-
-
-            entity.paths.toToilet = []
-            entity.paths.toToilet.push(xZToPoint(entityPosition.origin))
-            entityPosition.toilet.forEach(function (path) {
-                entity.paths.toToilet.push(xZToPoint(path))
-            })
-            entity.paths.toToilet.push(xZToPoint(fixedPositions.toilet))
-
-            entity.paths.fromToilet = entity.paths.toToilet.slice(0);
-            entity.paths.fromToilet = entity.paths.fromToilet.reverse()
-
-
-            entity.paths.toSmoke = []
-            entity.paths.toSmoke.push(xZToPoint(entityPosition.origin))
-            entityPosition.smoke.forEach(function (path) {
-                entity.paths.toSmoke.push(xZToPoint(path))
-            })
-            entity.paths.toSmoke.push(xZToPoint(fixedPositions.smoke))
-
-            entity.paths.fromSmoke = entity.paths.toSmoke.slice(0);
-            entity.paths.fromSmoke = entity.paths.fromSmoke.reverse()
-
-            // TODO add other paths for toToilet, fromToilet, toSmoke, fromSmoke
-            // TODO - Then demo by adding config to dat.gui to test travelling
-
-            entities.push(entity);
-            scene.add(entity);
-        })
+        initEntities()
 
 
 
@@ -565,6 +642,49 @@
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
     }
+    SteeringEntity.prototype.followPathAndReturn = function (path, loop, thresholdRadius = 1) {
+        var wayPoint = path[this.pathIndex]
+        if (wayPoint == null)
+            return;
+        if (this.position.distanceTo(wayPoint) < thresholdRadius) {
+            if (this.pathIndex >= path.length - 1) {
+                console.log('Entity:', this.name, 'Arrived:', this.action.type)
+                this.action.path = []
+                if (this.action.type === 'toBar') {
+                    this.action.type === 'atBar'
+                    //TODO - Send drink to bartender and wait, return will be triggered elsewhere
+                } else if (this.action.type === 'toToilet') {
+                    this.action.type === 'atToilet'
+                    var idleTime = 20
+                    var entity = this
+                    setTimeout(function () {
+                        entity.pathIndex = 0
+                        entity.action.type = 'fromToilet'
+                        entity.action.path = getPath(entity, entity.action.type)
+                        console.log('Entity:', entity.name, 'Return:', entity.action.type)
+                    }, idleTime);
+                } else if (this.action.type === 'toSmoke') {
+                    this.action.type === 'atSmoke'
+                    var idleTime = 30
+                    var entity = this
+                    setTimeout(function () {
+                        entity.pathIndex = 0
+                        entity.action.type = 'fromSmoke'
+                        entity.action.path = getPath(entity, entity.action.type)
+                        console.log('Entity:', entity.name, 'Return:', entity.action.type)
+                    }, idleTime);
+                }
+
+
+            } else {
+                this.pathIndex++
+            }
+        }
+        if (this.pathIndex >= path.length - 1 && !loop)
+            this.arrive(wayPoint)
+        else
+            this.seek(wayPoint)
+    }
 
     function animate() {
 
@@ -577,38 +697,25 @@
 
 
         for (var i = 0; i < entities.length; i++) {
-            entities[i].maxSpeed = params.maxSpeed;
-            entities[i].maxForce = params.maxForce;
+            var entity = entities[i]
+            entity.maxSpeed = params.maxSpeed;
+            entity.maxForce = params.maxForce;
 
-            entities[i].setAnimation()
+            entity.setAnimation()
 
-            if (params.toBar || params.fromBar || params.toToilet || params.fromToilet || params.toSmoke || params.fromSmoke) {
-                var pathToFollow
-                if (params.toBar) {
-                    pathToFollow = entities[i].paths.toBar
-                } else if (params.fromBar) {
-                    pathToFollow = entities[i].paths.fromBar
-                } else if (params.toToilet) {
-                    pathToFollow = entities[i].paths.toToilet
-                } else if (params.fromToilet) {
-                    pathToFollow = entities[i].paths.fromToilet
-                } else if (params.toSmoke) {
-                    pathToFollow = entities[i].paths.toSmoke
-                } else if (params.fromSmoke) {
-                    pathToFollow = entities[i].paths.fromSmoke
-                }
-                entities[i].followPath(pathToFollow, params.loop, params.thresholdRadius);
-                entities[i].lookWhereGoing(true)
+            if (entity.action.path && entity.action.path.length > 0) {
+                entity.followPathAndReturn(entity.action.path, params.loop, params.thresholdRadius);
+                entity.lookWhereGoing(true)
                 if (params.avoid) {
-                    entities[i].avoidDistance = params.avoidDistance;
-                    entities[i].avoid(entities)
-                    entities[i].avoid(furniture)
+                    entity.avoidDistance = params.avoidDistance;
+                    entity.avoid(entities)
+                    entity.avoid(furniture)
                 }
             } else {
-                entities[i].idle()
+                entity.idle()
             }
 
-            entities[i].update();
+            entity.update();
 
         }
 
