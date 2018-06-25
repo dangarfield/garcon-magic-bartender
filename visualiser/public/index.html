@@ -98,6 +98,32 @@
 
     var clickHistory = []
 
+    var barQueue = []
+
+    function processBarQueue() {
+        console.log('Processing bar queue', barQueue)
+        if (barQueue.length > 0) {
+            var order = barQueue[0]
+            if (order.status == 'waiting') {
+                order.status = 'serving'
+            } else if (order.status == 'serving') {
+                order.status = 'DONE'
+                var entity = entities[order.id]
+                console.log('Served entity: ID:', order.id, 'Name:', order.name, 'Entity:', entity.name)
+                barQueue.shift()
+                entity.pathIndex = 0
+                entity.action.type = 'fromBar'
+                entity.action.path = getPath(entity, entity.action.type)
+                console.log('Entity:', entity.name, 'Return:', entity.action.type)
+                if (barQueue.length > 0) {
+                    barQueue[0].status = 'serving'
+                }
+            }
+        }
+    }
+
+    setInterval(processBarQueue, 3000)
+
     function LCG(seed) {
         function lcg(a) {
             return a * 48271 % 2147483647;
@@ -312,6 +338,7 @@
             clone.scale.set(1, 1, 1)
             clone.castShadow = true;
             var entity = new SteeringEntity(clone)
+            entity._id = i
             entity.name = i
             entity.position.set(entityPosition.origin.x, 0, entityPosition.origin.z);
             entity.paths = {}
@@ -642,49 +669,6 @@
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
     }
-    SteeringEntity.prototype.followPathAndReturn = function (path, loop, thresholdRadius = 1) {
-        var wayPoint = path[this.pathIndex]
-        if (wayPoint == null)
-            return;
-        if (this.position.distanceTo(wayPoint) < thresholdRadius) {
-            if (this.pathIndex >= path.length - 1) {
-                console.log('Entity:', this.name, 'Arrived:', this.action.type)
-                this.action.path = []
-                if (this.action.type === 'toBar') {
-                    this.action.type === 'atBar'
-                    //TODO - Send drink to bartender and wait, return will be triggered elsewhere
-                } else if (this.action.type === 'toToilet') {
-                    this.action.type === 'atToilet'
-                    var idleTime = 20
-                    var entity = this
-                    setTimeout(function () {
-                        entity.pathIndex = 0
-                        entity.action.type = 'fromToilet'
-                        entity.action.path = getPath(entity, entity.action.type)
-                        console.log('Entity:', entity.name, 'Return:', entity.action.type)
-                    }, idleTime);
-                } else if (this.action.type === 'toSmoke') {
-                    this.action.type === 'atSmoke'
-                    var idleTime = 30
-                    var entity = this
-                    setTimeout(function () {
-                        entity.pathIndex = 0
-                        entity.action.type = 'fromSmoke'
-                        entity.action.path = getPath(entity, entity.action.type)
-                        console.log('Entity:', entity.name, 'Return:', entity.action.type)
-                    }, idleTime);
-                }
-
-
-            } else {
-                this.pathIndex++
-            }
-        }
-        if (this.pathIndex >= path.length - 1 && !loop)
-            this.arrive(wayPoint)
-        else
-            this.seek(wayPoint)
-    }
 
     function animate() {
 
@@ -735,6 +719,55 @@
 
         else if (this.velocity.length() > 12)
             this.mesh.play(4, 0.5) //Run
+    }
+    SteeringEntity.prototype.followPathAndReturn = function (path, loop, thresholdRadius = 1) {
+        var wayPoint = path[this.pathIndex]
+        if (wayPoint == null)
+            return;
+        if (this.position.distanceTo(wayPoint) < thresholdRadius) {
+            if (this.pathIndex >= path.length - 1) {
+                console.log('Entity:', this.name, 'Arrived:', this.action.type)
+                this.action.path = []
+                if (this.action.type === 'toBar') {
+                    this.action.type === 'atBar'
+                    //Send drink to bartender and wait, return will be in bartender loop
+                    barQueue.push({
+                        id: this._id,
+                        name: this.name,
+                        drink: this.action.drink,
+                        status: 'waiting'
+                    })
+                } else if (this.action.type === 'toToilet') {
+                    this.action.type === 'atToilet'
+                    var idleTime = 20
+                    var entity = this
+                    setTimeout(function () {
+                        entity.pathIndex = 0
+                        entity.action.type = 'fromToilet'
+                        entity.action.path = getPath(entity, entity.action.type)
+                        console.log('Entity:', entity.name, 'Return:', entity.action.type)
+                    }, idleTime);
+                } else if (this.action.type === 'toSmoke') {
+                    this.action.type === 'atSmoke'
+                    var idleTime = 30
+                    var entity = this
+                    setTimeout(function () {
+                        entity.pathIndex = 0
+                        entity.action.type = 'fromSmoke'
+                        entity.action.path = getPath(entity, entity.action.type)
+                        console.log('Entity:', entity.name, 'Return:', entity.action.type)
+                    }, idleTime);
+                }
+
+
+            } else {
+                this.pathIndex++
+            }
+        }
+        if (this.pathIndex >= path.length - 1 && !loop)
+            this.arrive(wayPoint)
+        else
+            this.seek(wayPoint)
     }
 </script>
 
