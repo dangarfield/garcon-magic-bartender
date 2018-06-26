@@ -8,6 +8,7 @@
     <script src="/public/js/libs/stats.min.js"></script>
     <script src="/public/js/libs/three.min.js"></script>
     <script src="/public/js/libs/socket.io.slim.js"></script>
+    <script src="/public/js/libs/axios.min.js"></script>
     <script src="/public/js/threejs/sea3d/SEA3D.js"></script>
     <script src="/public/js/threejs/sea3d/SEA3DLZMA.js"></script>
     <script src="/public/js/threejs/sea3d/SEA3DLoader.js"></script>
@@ -96,11 +97,23 @@
     }
 
 
-    var socket = io.connect('http://localhost:5100');
+    var socket = io.connect('http://localhost:5100')
 
     var clickHistory = []
 
     var barQueue = []
+    var movementList = []
+
+    var predictionResults = {
+        position: {
+            correct: 0,
+            wrong: 0
+        },
+        drink: {
+            correct: 0,
+            wrong: 0
+        }
+    }
 
     function processBarQueue() {
         console.log('Processing bar queue', barQueue)
@@ -128,6 +141,7 @@
     setInterval(processBarQueue, 3000)
 
     function renderBarQueue() {
+        console.log('renderBarQueue', barQueue)
         var queueParent = document.getElementById('barQueue');
         var oldQueue = document.getElementById('barQueueItems');
         var newQueue = document.createElement('div')
@@ -135,12 +149,69 @@
 
         barQueue.forEach(function (item) {
             var p = document.createElement('p')
-            p.textContent = 'ID: ' + item.id + ' Name: ' + item.name + ' Drink: ' + item.drink + ' Status: ' +
-                item.status
+            var text = 'ID: ' + item.id + ' Name: ' + item.name
+            text = text + ' Status: ' + item.status
+            // if (item.status == 'serving') {
+            text = text + ' Drink: ' + item.drink
+            // }
+            if (item.prediction) {
+                text = text + ' Prediction: ' + item.prediction
+            }
+            p.textContent = text
             newQueue.appendChild(p)
         })
         queueParent.removeChild(oldQueue);
         queueParent.appendChild(newQueue);
+    }
+
+    function renderMovementList() {
+        console.log('renderMovementList')
+        var queueParent = document.getElementById('movementQueue');
+        var oldQueue = document.getElementById('movementQueueItems');
+        var newQueue = document.createElement('div')
+        newQueue.id = 'movementQueueItems'
+
+        movementList.forEach(function (item) {
+            var p = document.createElement('p')
+            var text = 'ID: ' + item.id + ' Name: ' + item.name + ' Location: ' + item.location
+            if (item.prediction.location) {
+                text = text + ' Prediction: ' + item.prediction.location
+                if (item.prediction.location === 'bar' && item.prediction.drink) {
+                    text = text + ' ' + item.prediction.drink
+                }
+            }
+            p.textContent = text
+            newQueue.appendChild(p)
+        })
+        queueParent.removeChild(oldQueue);
+        queueParent.appendChild(newQueue);
+    }
+
+    function renderPredictionResults() {
+        console.log('renderPredictionResults')
+        var parent = document.getElementById('predictionResults');
+        var oldItems = document.getElementById('predictionResultsItems');
+        var newItems = document.createElement('div')
+        newItems.id = 'predictionResultsItems'
+
+        var pPara = document.createElement('p')
+        var pTotal = predictionResults.position.correct + predictionResults.position.wrong
+        var pPercent = Math.round((predictionResults.position.correct * 100) / pTotal)
+        var pText = 'Movements: ' + predictionResults.position.correct + ' of ' + (predictionResults.position.correct +
+            predictionResults.position.wrong) + ' - ' + pPercent + '%'
+        pPara.textContent = pText
+        newItems.appendChild(pPara)
+
+        var dPara = document.createElement('p')
+        var dTotal = predictionResults.drink.correct + predictionResults.drink.wrong
+        var dPercent = Math.round((predictionResults.drink.correct * 100) / dTotal)
+        var dText = 'Drinks: ' + predictionResults.drink.correct + ' of ' + (predictionResults.drink.correct +
+            predictionResults.drink.wrong) + ' - ' + dPercent + '%'
+        dPara.textContent = dText
+        newItems.appendChild(dPara)
+
+        parent.removeChild(oldItems);
+        parent.appendChild(newItems);
     }
 
     function LCG(seed) {
@@ -359,6 +430,7 @@
             var entity = new SteeringEntity(clone)
             entity._id = i
             entity.name = i
+            entity.origin = entityPosition.origin
             entity.position.set(entityPosition.origin.x, 0, entityPosition.origin.z);
             entity.paths = {}
 
@@ -402,6 +474,7 @@
             entity.action.drink = '' //beer, whiteWine, redWine, water, coke
             entity.action.positionList = []
             entityActionInit(entity, true)
+            entity.prediction = {}
             entities.push(entity)
             scene.add(entity)
         })
@@ -716,6 +789,120 @@
         console.log('Entity:', entity.name, 'broadcastPositionData', data)
         //TODO - Send this to server to generate training data
         socket.emit('finishedJourney', data);
+        return data
+    }
+
+
+    async function getPrediction(modelType, features) {
+        const url = 'http://localhost:5101/predict/' + modelType + '?features=' + features.join(',')
+        //   console.log('getMovementPrediction url', url)
+        const res = await axios(url)
+        //   console.log('getMovementPrediction res.data', res.data)
+        return res.data
+    }
+
+    function positionPredictionRequest(entity, positionList) {
+        if (!entity.prediction.position) {
+            var positions = positionList.splice(-5)
+            getPrediction('position', positions).then(function (res) {
+                console.log('Movement prediction result', entity._id, res)
+                if (res.score > 0.8) {
+                    entity.prediction.position = res.result
+                    movementList.forEach(function (item) {
+                        if (item.id === entity._id) {
+                            console.log('positionPredictionRequest item', entity, item)
+                            item.prediction.location = res.result
+                            renderMovementList()
+                            return null
+                        }
+                    })
+                    console.log('Position prediction result updated', entity)
+                }
+            })
+        }
+    }
+
+    function drinkPredictionRequest(entity, positionList) {
+        if (!entity.prediction.drink) {
+            getPrediction('drink', [entity.origin.x, entity.origin.z]).then(function (res) {
+                console.log('Drink prediction result', entity._id, res)
+                if (res.score > 0.8) {
+                    entity.prediction.drink = res.result
+                    barQueue.forEach(function (item) {
+                        if (item.id === entity._id) {
+                            console.log('drinkPredictionRequest item', entity, item)
+                            item.prediction = res.result
+                            renderBarQueue()
+                            return null
+                        }
+                    })
+                    movementList.forEach(function (item) {
+                        if (item.id === entity._id) {
+                            console.log('positionPredictionRequest item', entity, item)
+                            item.prediction.drink = res.result
+                            renderMovementList()
+                            return null
+                        }
+                    })
+                    console.log('Drink prediction result updated', entity)
+                }
+            })
+        }
+    }
+
+    function updateMovementDataAndPredict(entity) {
+        var location = null
+        if (entity.action.type === 'toBar') {
+            location = 'bar'
+        } else if (entity.action.type === 'toToilet') {
+            location = 'toilet'
+        } else if (entity.action.type === 'toSmoke') {
+            location = 'smoke'
+        }
+        if (location) {
+            var movementData = {
+                id: entity._id,
+                name: entity.name,
+                location: location,
+                prediction: {}
+            }
+            console.log('updateMovementData', movementList, movementData)
+            var inList = false
+            movementList.forEach(function (existingMovementData) {
+                if (existingMovementData.id == movementData.id) {
+                    inList = true
+                    return null
+                }
+            })
+            if (!inList) {
+                movementList.push(movementData)
+                renderMovementList()
+            }
+            var positionList = entity.action.positionList
+            if (entity.prediction.position == null && positionList.length >= 5) {
+                positionPredictionRequest(entity, positionList)
+            }
+            if (entity.prediction.drink == null) {
+                drinkPredictionRequest(entity)
+            }
+        }
+    }
+
+    function publishPredictionResults(prediction, result) {
+        console.log('publishPredictionResults', prediction, result)
+        if (prediction.position === result.location) {
+            predictionResults.position.correct++
+        } else {
+            predictionResults.position.wrong++
+        }
+        if (prediction.position === 'bar' || result.location === 'bar') {
+            if (prediction.drink === result.drink) {
+                predictionResults.drink.correct++
+            } else {
+                predictionResults.drink.wrong++
+            }
+        }
+        renderPredictionResults()
     }
 
     function animate() {
@@ -742,7 +929,15 @@
 
             if (entity.action.path && entity.action.path.length > 0) {
                 entity.followPathAndReturn(entity.action.path, params.loop, params.thresholdRadius, function () {
-                    broadcastPositionData(entity)
+                    var journeyData = broadcastPositionData(entity)
+                    publishPredictionResults(entity.prediction, journeyData)
+                    delete entity.prediction.position
+                    delete entity.prediction.drink
+
+                    movementList = movementList.filter(function (el) {
+                        return el.id !== entity._id
+                    })
+                    renderMovementList()
                 });
                 entity.lookWhereGoing(true)
                 if (params.avoid) {
@@ -752,6 +947,7 @@
                 }
                 if (capturePositionData) {
                     entity.action.positionList.push([Math.floor(entity.position.x), Math.floor(entity.position.z)])
+                    updateMovementDataAndPredict(entity)
                     // console.log('Entity:', entity.name, 'entity.action.positionList:', entity.action.positionList)
                 }
             } else {
@@ -790,11 +986,13 @@
                 if (this.action.type === 'toBar') {
                     this.action.type === 'atBar'
                     //Send drink to bartender and wait, return will be in bartender loop
+                    var id = this._id
                     barQueue.push({
-                        id: this._id,
+                        id: id,
                         name: this.name,
                         drink: this.action.drink,
-                        status: 'waiting'
+                        status: 'waiting',
+                        prediction: this.prediction.drink
                     })
                     renderBarQueue()
                     arrivalCallBack()
@@ -842,6 +1040,17 @@
     <div id="barQueue">
         <h3>Bar Queue</h3>
         <div id="barQueueItems"></div>
+    </div>
+    <div id="movementQueue">
+        <h3>Movement Queue</h3>
+        <div id="movementQueueItems"></div>
+    </div>
+    <div id="predictionResults">
+        <h3>Prediction Results</h3>
+        <div id="predictionResultsItems">
+            <p>Movements: 0 of 0</p>
+            <p>Drinks: 0 of 0</p>
+        </div>
     </div>
     <div id="loading-msg"></div>
 </body>

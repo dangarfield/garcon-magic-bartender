@@ -57,16 +57,33 @@ a {
     color: #BCFF00;
 }
 
-#barQueue {
+#barQueue,
+#movementQueue,
+#predictionResults {
     font-family: 'opensans';
-    left: 20px;
-    top: 0px;
     position: absolute;
     font-size: 11px;
     width: 300px;
 }
 
-#barQueue h3 {
+#barQueue {
+    left: 20px;
+    top: 0px;
+}
+
+#movementQueue {
+    left: 360px;
+    top: 0px;
+}
+
+#predictionResults {
+    left: 20px;
+    bottom: 10px;
+}
+
+#barQueue h3,
+#movementQueue h3,
+#predictionResults h3 {
     color: #BFFF00;
     font-weight: bold;
 }

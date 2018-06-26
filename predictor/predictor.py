@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, jsonify
+from flask_cors import CORS
 import pandas
 import numpy
 from sklearn import model_selection
@@ -17,6 +18,7 @@ import os
 
 
 app = Flask(__name__)
+CORS(app)
 
 model_position = None
 model_position_version = None

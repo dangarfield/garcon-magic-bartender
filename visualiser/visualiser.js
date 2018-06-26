@@ -5,7 +5,7 @@ const io = require('socket.io')(server)
 const path = require('path')
 const fs = require('fs')
 const dateFormat = require('dateformat')
-var argv = require('minimist')(process.argv.slice(2))
+const argv = require('minimist')(process.argv.slice(2))
 
 let fileRaw
 let filePosition
@@ -34,7 +34,7 @@ function processRawData (data) {
   fs.appendFileSync(fileRaw, JSON.stringify(data))
 }
 function processDrinkTrainingData (data) {
-  if (data.drink !== '') {
+  if (data.drink !== '' && data.positions.length > 0) {
     var cols = []
     cols.push(data.positions[0][0])
     cols.push(data.positions[0][1])
