@@ -302,9 +302,5 @@ def train_model(load_function, name, day):
 
 
 if __name__ == '__main__':
-    # train_model(load_data_position, 'position', '2018-06-25_09-11-24')
-    # train_model(load_data_drink, 'drink', '2018-06-25_09-11-24')
-
     load_default_models()
-    get_available_models()
     app.run(host='0.0.0.0', port=5101)

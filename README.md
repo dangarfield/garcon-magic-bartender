@@ -1,6 +1,8 @@
 # Garcon! Magic Bartender
 > Magic Bartenders who predict the future and make the right drinks for the right customer so they are ready when they get to the bar
 
+https://image.ibb.co/hOxcH8/garcon_example.png
+
 The experience of having a drink ready for you when you get to the bar, and the bartending remembering you and your habits is great for our customers. We want to try and assist our bartenders in this manner by creating some unobtrusive but modern technology.
 
 We can do this programmatically, eg, User X has bought 1 beer last time, we can assume he'll buy another one now. However, we want to be able to create some machine learning models to aid with this task. For this hackathon project we will make some assumptions, limit the data to synthetically created and not use any metadata about our customers to aid in the modelling (eg, age, gender, location, activity preference, favourite newspaper, colour of swimshorts etc)
@@ -17,7 +19,7 @@ TUI Maker Fair Project 2018 from Dan Garfield
 - 1 queue position, users will queue on top of each other (no collision detecting within bar area)
 - No one leaves, no one enters the bar, no one changes seat or position
 
-### Base logic (tbc)
+### Base logic
 `Logic Stub`
 - Seeded random
 - Create 10-ish profiles for behaviour (walking speed, frequency of drinking, frequency of going to toilet, likeliness of drink choice)
@@ -26,9 +28,12 @@ TUI Maker Fair Project 2018 from Dan Garfield
 `Visualiser`
 - Init with logic stubbed data
 - Create static map of restaurant with tables, bar, positions for all (50?) users (origins) and toilet
-- Paths and origins are set for each user / can be group based on position, different paths can go in different directions to the bar / toilet
+- Paths and origins are set for each user / can be group based on position, different paths can go in different directions to the bar / toilet / smoke
 - Queue required for bartender service, bartender requires 10 seconds to make a drink
 - (For simplicity, although against decoupling) Syndicate travel event data, rather than doing this in the movement listener
+-- Data about a journey is sent to the server on completion
+-- Journey data is processed into training data for movement and drink prediction
+-- Raw data and be processed again if necessary
 - Animate loop
 -- User at table, no movement required > Stay
 -- User at table, go to toilet > Create / select path(s) and follow
@@ -42,6 +47,7 @@ TUI Maker Fair Project 2018 from Dan Garfield
 
 
 `Movement Listener`
+- Note: Most of this logic is in the visualiser node.js app
 - Based on movement data sent / polled from the visualised
 - If the movement is a finished journey we can prepare training data for the movement classifier or predict movement based on the classifier
 - If number of steps is longer than 5 and movement is towards toilet or bar > Get prediction from movement classifier
@@ -55,7 +61,9 @@ TUI Maker Fair Project 2018 from Dan Garfield
 - This would make it easier, eg, we could try Random Forest Classifiers or Naive Bayesian Classifiers straight away
 
 `Drink Classifier`
-- tbc
+- As above, however, the data is very undimensional, the only real dimension we have is who the user is
+- Use origin coordinates as the main features until we find some good real life profiles that we can map to
+- We could also group profiles around tables in order to mimic groups of users and the classifier would take this into account
 
 `Dashboard`
 - Plot waiting customers (eg, bartender activity list)
@@ -63,24 +71,50 @@ TUI Maker Fair Project 2018 from Dan Garfield
 - Plot incoming prediction list
 - Plot percentage and total orders correctly predicted
 
-### Technology Usage (tbc)
+### Technology Usage and Installation
 `Visualiser`
-- Three.js
-- ThreeSteer for three.js
+Technologies
+- Three.js and ThreeSteer library
+- Node.js and socket.io for communication
+- Zeit now for easy and free clood deployment
+
+Installation and Usage
+- Install node.js, open terminal and ensure `node` and `npm` are available (in path). Feel free to use version managers, `n` etc
+- cd to visualiser directory `cd visualiser`
+- Install node libraries with `npm install` and also install some global libraries `npm install -g now watchman`
+- Run the app `npm start`, or `node visualiser.js` or `watchman visualiser.js`, whichever you prefer
+- Open in browser `http://localhost:5100`, everything should work, you server should start logging journey data making predictions
+- Journey data and a processed format will be available in the `training-data` folder
+- In order to see predictions, you need to run your classifier with a model
+- To reprocess an existing raw file into the training data, use `node visualiser -f 2018-06-26_06-10-01_raw.json`
 
 `Classifiers`
-- As simple as possible, skikit-learn or something similar with an api layer
-- Start with Random Forest and Naive Bayesian Classifiers based on fixed column
-- We can move on to
+Technologies
+- Python
+- Scikit-learn, numpy, pandas, . No need for anything like tensoflow at this point
+-- KNeighborsClassifier seemed to be the quickest and most accurate from my initial look
+- Flask for API and front end
+- Zeit now (and docker) for easy and free clood deployment
+
+Installation and Usage
+- Install python (3, although 2 will be fine), open terminal and ensure `python` and `pip` are available (in path). Feel free to use version and environment managers, `pyenv`, `virtualenv` etc
+- cd to predictor directory `cd predictor`
+- Install python libraries with `pip install -r requirements.txt`
+- Run the app `python predictor.py`
+- If you have any saved models, one will be loaded automatically for the `position classifier` (eg movement classifier) and the `drink classifier`
+- Open `http://localhost:5101` in the browser to view the currently active models, available models, model accuracy and uploading new models
+- To create new models using new training data, upload the training data files from the visualiser on this page. The new models will be training as part of the upload, you can select then on this page also
+- You can predict results through the APIs, example urls `http://localhost:5101/predict/position?features=704,-845,543,-593,352,-473,99,-634,-155,-793` and `http://localhost:5101/predict/drink?features=-1275,1347`
 
 ### Still to do
 - General
--- Update this readme technology usage, installation, base logic and assumptions
+-- Deploy to zeit now, including setting environment vars for hardcoded data / secrets
 
 - Visualiser
 -- Better UI for lists on dashboard, eg highlight the bar queue, movement list and prediction results better
 -- Add icons for actual and predicted destinations that hover over the moving individuals
 -- Add / adapt the bar queue for a 'bartender display' which contains a combination of the incoming movements to the bar and the existing bar list
+-- Bug when long running: journey ends / starts dont seem to trigger
 -- Add rotating effect for screen, eg, keep orbit controls, but when dragged mouse movement, keep rotating slowly, zoom in slightly for default
 -- Syndicate data for bartender display to a queue (pubnub or something), that the other projects can think about using
 -- Add proper human names to the users
@@ -95,3 +129,4 @@ TUI Maker Fair Project 2018 from Dan Garfield
 -- Walk through with models with Bijeesh and Abhiram, it seems to be fairly solid
 -- The drinks predictor is very basic, purely based on that users' location. As these profile attributes are random assigned, it is difficult at this stage to group typical drinkers together (eg, girls night out table -> wine, stag do table -> beer). Think about how we could / should plant this data
 -- Potentially add additional metadata to the users, such as age, income, etc, but again, faking this data is messy. Could we maybe find som real world drinkers profile information to replace our randomly assigned one?
+-- Add a graphic representation of the training data, eg, plot all journeys on a graph so we can movement trends which will help explain the models
