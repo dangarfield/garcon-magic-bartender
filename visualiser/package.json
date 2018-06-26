@@ -12,6 +12,7 @@
   "dependencies": {
     "dateformat": "^3.0.3",
     "express": "^4.16.3",
+    "minimist": "^1.2.0",
     "socket.io": "^2.1.1"
   }
 }
