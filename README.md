@@ -73,5 +73,25 @@ TUI Maker Fair Project 2018 from Dan Garfield
 - Start with Random Forest and Naive Bayesian Classifiers based on fixed column
 - We can move on to
 
-### Still to do (tbc)
-- tbc
+### Still to do
+- General
+-- Update this readme technology usage, installation, base logic and assumptions
+
+- Visualiser
+-- Better UI for lists on dashboard, eg highlight the bar queue, movement list and prediction results better
+-- Add icons for actual and predicted destinations that hover over the moving individuals
+-- Add / adapt the bar queue for a 'bartender display' which contains a combination of the incoming movements to the bar and the existing bar list
+-- Add rotating effect for screen, eg, keep orbit controls, but when dragged mouse movement, keep rotating slowly, zoom in slightly for default
+-- Syndicate data for bartender display to a queue (pubnub or something), that the other projects can think about using
+-- Add proper human names to the users
+-- Maybe add some more 3d models for the bar, tables, walls, maybe some other furniture such as piano, pictures, plants etc
+-- Get users to point the right way when they are at the origin
+-- I think there are some dud journeys that still go through the walls, maybe add something back into the dat.gui that allows us to test all movements again, this is probably because I adjusted the threshold radius to 50 from 10
+-- Potentially reinstate the avoid for the journeys, although we have to deal with the bottleneck locations (typically around the origins of others and at the bar, toilet and smoke destinations)
+-- Test with different seeded values and find a good example seed that highlights a failed movement (eg, in the top left room going to the toilet, but incorrectly predicted as the bar)
+-- Try moving the bar to the top right hand corner to make movements even more accurate, probably more pain than its worth
+
+- Predictor
+-- Walk through with models with Bijeesh and Abhiram, it seems to be fairly solid
+-- The drinks predictor is very basic, purely based on that users' location. As these profile attributes are random assigned, it is difficult at this stage to group typical drinkers together (eg, girls night out table -> wine, stag do table -> beer). Think about how we could / should plant this data
+-- Potentially add additional metadata to the users, such as age, income, etc, but again, faking this data is messy. Could we maybe find som real world drinkers profile information to replace our randomly assigned one?
