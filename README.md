@@ -1,7 +1,7 @@
 # Garcon! Magic Bartender
 > Magic Bartenders who predict the future and make the right drinks for the right customer so they are ready when they get to the bar
 
-https://image.ibb.co/hOxcH8/garcon_example.png
+![Garcon - Margic Bartender](https://image.ibb.co/hOxcH8/garcon_example.png)
 
 The experience of having a drink ready for you when you get to the bar, and the bartending remembering you and your habits is great for our customers. We want to try and assist our bartenders in this manner by creating some unobtrusive but modern technology.
 
