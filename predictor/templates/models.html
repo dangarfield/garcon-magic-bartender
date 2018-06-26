@@ -1,0 +1,93 @@
+<html>
+
+<head>
+    <title>Garcon - Magic Bartender - Predictor</title>
+</head>
+
+<body>
+
+</body>
+
+</html>
+
+
+
+
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <!-- <link rel="icon" href="../../../../favicon.ico"> -->
+
+    <title>Garcon - Magic Bartender - Predictor</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="//stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .card.position {
+            background-color: lightgoldenrodyellow;
+        }
+
+        .card.drink {
+            background-color: lightblue;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+        <a class="navbar-brand" href="/">Garcon - Predictor</a>
+    </nav>
+
+    <div class="container-fluid">
+        <h1>Garcon - Magic Bartender - Predictor</h1>
+
+        <h3>Active Models</h3>
+        <p>Position:
+            <span class="badge badge-secondary">{{ model_position_version }}</span>
+        </p>
+        <p>Drink:
+            <span class="badge badge-secondary">{{ model_drink_version }}</span>
+        </p>
+
+        <h3>Available Models</h3>
+        <div class="row">
+            {% for model in available_models %}
+            <div class="col-3">
+                <div class="card {{ model.type }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ model.name }}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">{{ model.score }}</h6>
+                        <p class="card-text">TODO: Add a plot of the to show the model paths</p>
+                        {% if model.active %}
+                        <button class="btn" disabled="disabled">Currently active</button>
+                        {% else %}
+                        <a href="/active?file={{ model.name }}" class="btn btn-primary">Make active</a>
+                        <a href="/delete?file={{ model.name }}" class="btn btn-danger btn-sm">Delete</a>
+                        {% endif %}
+
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <h3>Create model from data</h3>
+        <form method="post" action="/upload" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="file">Select data file</label>
+                <input type="file" class="form-control-file" id="file" name="file">
+            </div>
+            <button type="submit" class="btn btn-primary mb-2">Upload</button>
+        </form>
+    </div>
+</body>
+
+</html>
