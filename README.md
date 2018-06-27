@@ -124,6 +124,7 @@ Installation and Usage
 -- Potentially reinstate the avoid for the journeys, although we have to deal with the bottleneck locations (typically around the origins of others and at the bar, toilet and smoke destinations)
 -- Test with different seeded values and find a good example seed that highlights a failed movement (eg, in the top left room going to the toilet, but incorrectly predicted as the bar)
 -- Try moving the bar to the top right hand corner to make movements even more accurate, probably more pain than its worth
+-- Add a more orderly queue for the bar
 
 - Predictor
 -- Walk through with models with Bijeesh and Abhiram, it seems to be fairly solid

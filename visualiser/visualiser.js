@@ -6,6 +6,7 @@ const path = require('path')
 const fs = require('fs')
 const dateFormat = require('dateformat')
 const argv = require('minimist')(process.argv.slice(2))
+const hat = require('hat')
 
 let fileRaw
 let filePosition
@@ -16,15 +17,61 @@ app.get('/', function (req, res) {
   res.sendfile(path.join(__dirname, '/public/index.html'))
 })
 
+let connectedSockets = []
+let connectedBartenders = []
+
 io.on('connection', function (socket) {
-  console.log('Visualiser connected')
+  socket.id = hat()
+  console.log('Socket connected', socket.id)
+  connectedSockets.push(socket)
+  sendConnectedBartenderData()
+  console.log('connectedSockets', connectedSockets.length)
   socket.on('finishedJourney', function (data) {
     writeToFile(data)
   })
+  socket.on('toBartender', function (data) {
+    // console.log('toBartender', data)
+    connectedBartenders.forEach(function (bartenderSocket) {
+      bartenderSocket.emit('toBartender', data)
+    })
+  })
+  socket.on('fromBartender', function (data) {
+    // console.log('fromBartender', data)
+    connectedSockets.forEach(function (connectedSocket) {
+      connectedSocket.emit('fromBartender', data)
+    })
+  })
+  socket.on('bartenderConnected', function (data) {
+    console.log('bartenderConnected', data)
+    socket.name = data.name
+    socket.description = data.description
+    connectedBartenders = connectedBartenders.filter(el => el.name !== data.name)
+    connectedBartenders.push(socket)
+    sendConnectedBartenderData()
+    console.log('connectedBartenders', connectedBartenders.length)
+  })
+  socket.on('disconnect', function () {
+    console.log('Socket disconnected', socket.id, socket.name)
+    connectedSockets = connectedSockets.filter(el => el.id !== socket.id)
+    console.log('connectedSockets', connectedSockets.length)
+    connectedBartenders = connectedBartenders.filter(el => el.name !== socket.name)
+    console.log('connectedBartenders', connectedBartenders.length)
+    sendConnectedBartenderData()
+  })
 })
 
+function sendConnectedBartenderData () {
+  var bartenders = []
+  connectedBartenders.forEach(function (bartender) {
+    bartenders.push({name: bartender.name, description: bartender.description})
+  })
+  connectedSockets.forEach(function (connectedSocket) {
+    connectedSocket.emit('bartenderConnected', bartenders)
+  })
+}
+
 function writeToFile (journey) {
-  console.log('finishedJourney', journey)
+//   console.log('finishedJourney', journey)
   finishedJourneys.push(journey)
   processRawData(finishedJourneys)
   processDrinkTrainingData(journey)

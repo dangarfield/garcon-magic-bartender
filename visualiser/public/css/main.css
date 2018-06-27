@@ -59,7 +59,8 @@ a {
 
 #barQueue,
 #movementQueue,
-#predictionResults {
+#predictionResults,
+#connectedBartenders {
     font-family: 'opensans';
     position: absolute;
     font-size: 11px;
@@ -81,9 +82,16 @@ a {
     bottom: 10px;
 }
 
+#connectedBartenders {
+    right: 10px;
+    bottom: 10px;
+    text-align: right;
+}
+
 #barQueue h3,
 #movementQueue h3,
-#predictionResults h3 {
+#predictionResults h3,
+#connectedBartenders h3 {
     color: #BFFF00;
     font-weight: bold;
 }

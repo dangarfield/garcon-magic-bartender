@@ -1,19 +1,16 @@
 {
-  "name": "garcon",
+  "name": "bartender",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node visualiser.js"
+    "start": "node bartender.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "dateformat": "^3.0.3",
     "express": "^4.16.3",
-    "hat": "0.0.3",
-    "minimist": "^1.2.0",
     "socket.io": "^2.1.1"
   }
 }

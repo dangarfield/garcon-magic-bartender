@@ -88,12 +88,7 @@
             x: 2250,
             z: 1500
         },
-        toBar: false,
-        fromBar: false,
-        toToilet: false,
-        fromToilet: false,
-        toSmoke: false,
-        fromSmoke: false
+        start: false
     }
 
 
@@ -103,6 +98,7 @@
 
     var barQueue = []
     var movementList = []
+    var connectedBartenders = []
 
     var predictionResults = {
         position: {
@@ -116,8 +112,11 @@
     }
 
     function processBarQueue() {
-        console.log('Processing bar queue', barQueue)
-        if (barQueue.length > 0) {
+
+        if (connectedBartenders.length > 0) {
+            console.log('Bar queue is being processed by connected bartenders', connectedBartenders)
+        } else if (barQueue.length > 0) {
+            console.log('Processing bar queue with default', barQueue)
             var order = barQueue[0]
             if (order.status == 'waiting') {
                 order.status = 'serving'
@@ -126,19 +125,24 @@
                 order.status = 'DONE'
                 var entity = entities[order.id]
                 console.log('Served entity: ID:', order.id, 'Name:', order.name, 'Entity:', entity.name)
-                barQueue.shift()
-                entity.pathIndex = 0
-                entity.action.type = 'fromBar'
-                entity.action.path = getPath(entity, entity.action.type)
-                console.log('Entity:', entity.name, 'Return:', entity.action.type)
-                if (barQueue.length > 0) {
-                    barQueue[0].status = 'serving'
-                }
-                renderBarQueue()
+                triggerServed(entity)
             }
         }
     }
-    setInterval(processBarQueue, 3000)
+
+    function triggerServed(entity) {
+        barQueue.shift()
+        entity.pathIndex = 0
+        entity.action.type = 'fromBar'
+        entity.action.path = getPath(entity, entity.action.type)
+        console.log('Entity:', entity.name, 'Return:', entity.action.type)
+        if (barQueue.length > 0) {
+            barQueue[0].status = 'serving'
+        }
+        renderBarQueue()
+    }
+
+    setInterval(processBarQueue, 3000) // Default speed for serving a customer, if there are any bartenders connected, this will not apply
 
     function renderBarQueue() {
         console.log('renderBarQueue', barQueue)
@@ -212,6 +216,31 @@
 
         parent.removeChild(oldItems);
         parent.appendChild(newItems);
+    }
+
+    function renderConnectedBartenders() {
+        console.log('renderConnectedBartenders')
+
+        var queueParent = document.getElementById('connectedBartenders');
+        var oldQueue = document.getElementById('connectedBartendersItems');
+        var newQueue = document.createElement('div')
+        newQueue.id = 'connectedBartendersItems'
+
+        connectedBartenders.forEach(function (bartender) {
+            var p = document.createElement('p')
+            var text = bartender.name + ' - ' + bartender.description
+            p.textContent = text
+            newQueue.appendChild(p)
+        })
+        if (connectedBartenders.length == 0) {
+            var p = document.createElement('p')
+            var text = 'None - Auto-serve within 3 seconds'
+            p.textContent = text
+            newQueue.appendChild(p)
+
+        }
+        queueParent.removeChild(oldQueue);
+        queueParent.appendChild(newQueue);
     }
 
     function LCG(seed) {
@@ -473,8 +502,8 @@
             entity.action.type = 'idle' //toBar, atBar, fromBar, toToilet, atToilet, fromToilet, toSmoke, atToilet, fromSmoke
             entity.action.drink = '' //beer, whiteWine, redWine, water, coke
             entity.action.positionList = []
-            entityActionInit(entity, true)
             entity.prediction = {}
+            entityActionInit(entity, true)
             entities.push(entity)
             scene.add(entity)
         })
@@ -674,37 +703,42 @@
 
         // });
 
-        gui.add(params, 'maxSpeed', 2, 20).name('Max Speed').step(1);
-        gui.add(params, 'maxForce', 1, 20).name('Max Force').step(1);
-        gui.add(params, 'thresholdRadius', 10, 500).name('Threshold Radius').step(1);
-        gui.add(params, 'avoidDistance', 10, 2000).name('Avoid Distance').step(1);
-        gui.add(params, 'loop').name('Loop');
-        gui.add(params, 'avoid').name('Avoid');
-
-        var toBarGui = gui.add(params, 'toBar').name('To Bar');
-        toBarGui.onFinishChange(function (value) {
-            reset()
-        })
-        var fromBarGui = gui.add(params, 'fromBar').name('From Bar');
-        fromBarGui.onFinishChange(function (value) {
-            reset()
-        })
-        var toToiletGui = gui.add(params, 'toToilet').name('To Toilet');
-        toToiletGui.onFinishChange(function (value) {
-            reset()
-        })
-        var fromToiletGui = gui.add(params, 'fromToilet').name('From Toilet');
-        fromToiletGui.onFinishChange(function (value) {
-            reset()
-        })
-        var toSmokeGui = gui.add(params, 'toSmoke').name('To Smoke');
-        toSmokeGui.onFinishChange(function (value) {
-            reset()
-        })
-        var fromSmokeGui = gui.add(params, 'fromSmoke').name('From Smoke');
-        fromBarGui.onFinishChange(function (value) {
-            reset()
-        })
+        // gui.add(params, 'maxSpeed', 2, 20).name('Max Speed').step(1);
+        // gui.add(params, 'maxForce', 1, 20).name('Max Force').step(1);
+        // gui.add(params, 'thresholdRadius', 10, 500).name('Threshold Radius').step(1);
+        // gui.add(params, 'avoidDistance', 10, 2000).name('Avoid Distance').step(1);
+        // gui.add(params, 'loop').name('Loop');
+        // gui.add(params, 'avoid').name('Avoid');
+        // var startGui = gui.add(params, 'start').name('Start');
+        // startGui.onFinishChange(function (value) {
+        //     entities.forEach(function (entity) {
+        // entityActionInit(entity, true)
+        //     })
+        // })
+        // var toBarGui = gui.add(params, 'toBar').name('To Bar');
+        // toBarGui.onFinishChange(function (value) {
+        //     reset()
+        // })
+        // var fromBarGui = gui.add(params, 'fromBar').name('From Bar');
+        // fromBarGui.onFinishChange(function (value) {
+        //     reset()
+        // })
+        // var toToiletGui = gui.add(params, 'toToilet').name('To Toilet');
+        // toToiletGui.onFinishChange(function (value) {
+        //     reset()
+        // })
+        // var fromToiletGui = gui.add(params, 'fromToilet').name('From Toilet');
+        // fromToiletGui.onFinishChange(function (value) {
+        //     reset()
+        // })
+        // var toSmokeGui = gui.add(params, 'toSmoke').name('To Smoke');
+        // toSmokeGui.onFinishChange(function (value) {
+        //     reset()
+        // })
+        // var fromSmokeGui = gui.add(params, 'fromSmoke').name('From Smoke');
+        // fromBarGui.onFinishChange(function (value) {
+        //     reset()
+        // })
         window.addEventListener('resize', onWindowResize, false);
         document.addEventListener('mousedown', onClick, true);
         animate();
@@ -817,6 +851,11 @@
                         }
                     })
                     console.log('Position prediction result updated', entity)
+                    if (entity.prediction.position && entity.prediction.position === 'bar' && entity.prediction
+                        .drink) {
+                        sendInfoToBartender(entity._id, entity.name, 'incoming', entity.action.drink, entity.prediction
+                            .drink)
+                    }
                 }
             })
         }
@@ -845,6 +884,10 @@
                         }
                     })
                     console.log('Drink prediction result updated', entity)
+                    if (entity.prediction.position && entity.prediction.position === 'bar' && entity.prediction
+                        .drink) {
+                        sendInfoToBartender(entity._id, entity.name, 'incoming', entity.prediction.drink)
+                    }
                 }
             })
         }
@@ -866,7 +909,7 @@
                 location: location,
                 prediction: {}
             }
-            console.log('updateMovementData', movementList, movementData)
+            // console.log('updateMovementData', movementList, movementData)
             var inList = false
             movementList.forEach(function (existingMovementData) {
                 if (existingMovementData.id == movementData.id) {
@@ -904,6 +947,47 @@
         }
         renderPredictionResults()
     }
+
+    function sendInfoToBartender(id, name, status, order, prediction) {
+        // Predictions for movement and drink
+        // Person arrived
+        var data = {
+            id: id,
+            name: name,
+            status: status,
+            order: order,
+            prediction: prediction
+        }
+        socket.emit('toBartender', data)
+    }
+
+    function handleBartenderCommunication(data) {
+        console.log('fromBartender', data)
+        // Bartender serving customer
+        if (data.status === 'serving') {
+
+            var orders = barQueue.filter(el => el.id === data.id)
+            console.log('flagging serving', data, barQueue, orders)
+            if (orders.length > 0) {
+                orders[0].status = 'serving'
+                renderBarQueue()
+            }
+        }
+
+        // Customer has been served
+        if (data.status === 'served') {
+            var entity = entities[data.id]
+            triggerServed(entity)
+        }
+    }
+
+    function handleBartenderConnected(data) {
+        console.log('handleBartenderConnected', data)
+        connectedBartenders = data
+        renderConnectedBartenders()
+    }
+    socket.on('bartenderConnected', handleBartenderConnected)
+    socket.on('fromBartender', handleBartenderCommunication)
 
     function animate() {
         frameNo++
@@ -995,6 +1079,7 @@
                         prediction: this.prediction.drink
                     })
                     renderBarQueue()
+                    sendInfoToBartender(id, this.name, 'waiting', this.action.drink, this.prediction.drink)
                     arrivalCallBack()
                 } else if (this.action.type === 'toToilet') {
                     this.action.type === 'atToilet'
@@ -1006,6 +1091,10 @@
                         entity.action.path = getPath(entity, entity.action.type)
                         console.log('Entity:', entity.name, 'Return:', entity.action.type)
                     }, idleTime);
+                    if (this.prediction.position === 'bar') {
+                        sendInfoToBartender(entity._id, entity.name, 'incorrect', entity.action.drink, entity.prediction
+                            .drink)
+                    }
                     arrivalCallBack()
                 } else if (this.action.type === 'toSmoke') {
                     this.action.type === 'atSmoke'
@@ -1017,6 +1106,10 @@
                         entity.action.path = getPath(entity, entity.action.type)
                         console.log('Entity:', entity.name, 'Return:', entity.action.type)
                     }, idleTime);
+                    if (this.prediction.position === 'bar') {
+                        sendInfoToBartender(entity._id, entity.name, 'incorrect', entity.action.drink, entity.prediction
+                            .drink)
+                    }
                     arrivalCallBack()
                 } else if (this.action.type === 'fromBar' || this.action.type === 'fromToilet' || this.action.type ===
                     'fromSmoke') {
@@ -1050,6 +1143,12 @@
         <div id="predictionResultsItems">
             <p>Movements: 0 of 0</p>
             <p>Drinks: 0 of 0</p>
+        </div>
+    </div>
+    <div id="connectedBartenders">
+        <h3>Connected Bartenders</h3>
+        <div id="connectedBartendersItems">
+            <p>None - Auto-serve within 3 seconds</p>
         </div>
     </div>
     <div id="loading-msg"></div>

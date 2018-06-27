@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Basic Shuffle Demo</title>
+
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" / <!-- Prefetch DNS for external assets -->
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="dns-prefetch" href="https://www.google-analytics.com">
+    <link rel="dns-prefetch" href="https://unpkg.com">
+
+
+    <link rel="stylesheet" href="//vestride.github.io/Shuffle/css/normalize.css" />
+    <link rel="stylesheet" href="//vestride.github.io/Shuffle/css/style.css" />
+    <link rel="stylesheet" href="//vestride.github.io/Shuffle/css/shuffle-styles.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,700">
+
+    <style>
+        .picture-item {
+            height: 350px;
+        }
+
+        figure[data-statuscode="1"] .picture-item__inner {
+            background-color: lightgreen;
+        }
+
+        figure[data-statuscode="2"] .picture-item__inner {
+            background-color: lightcyan;
+        }
+
+        .progress-container {
+            margin: 0;
+            width: 50px;
+            height: 50px;
+            position: relative;
+        }
+    </style>
+</head>
+
+<body class="basic">
+
+
+
+
+    <main role="main" id="main">
+
+        <div class="container">
+
+            <h1>Garcon - Magic Bartender - Bartender Dashboard</h1>
+
+            <h3>Connection Status:
+                <span class="socket-status">Disconnected</span>
+            </h3>
+            <div id="grid" class="row my-shuffle-container">
+
+                <!-- <figure class="col-3@xs col-4@sm col-3@md picture-item" data-date-created="2017-04-30" data-title="Lake Walchen">
+                    <div class="picture-item__inner">
+                        <div class="aspect aspect--16x9">
+                            <div class="aspect__inner">
+                                <img src="https://images.unsplash.com/photo-1493585552824-131927c85da2?ixlib=rb-0.3.5&auto=format&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=284&h=160&fit=crop&s=6ef0f8984525fc4500d43ffa53fe8190"
+                                />
+                            </div>
+                        </div>
+                        <div class="picture-item__details">
+                            <figcaption class="picture-item__title">
+                                Lake Walchen
+                            </figcaption>
+                            <p class="picture-item__tags hidden@xs">nature</p>
+                        </div>
+                    </div>
+                </figure> -->
+                <div class="col-1@sm col-1@xs my-sizer-element"></div>
+
+            </div>
+
+        </div>
+
+
+    </main>
+
+    <script src="/js/libs/socket.io.slim.js"></script>
+    <script src="/js/libs/shuffle.js"></script>
+    <script src="/js/libs/progressbar.js"></script>
+
+
+
+    <script>
+        var Shuffle = window.Shuffle;
+
+        var Demo = function (element) {
+            this.element = element;
+
+            this.shuffle = new Shuffle(element, {
+                itemSelector: '.picture-item',
+                sizer: element.querySelector('.my-sizer-element'),
+            });
+            this.shuffle.on(Shuffle.EventType.LAYOUT, function () {
+                console.log('Things finished moving!');
+                serveCustomer()
+            });
+            this.mode = 'exclusive';
+        };
+
+
+        Demo.prototype._htmlToElement = function (html) {
+            var template = document.createElement('template')
+            html = html.trim()
+            template.innerHTML = html
+            return template.content.firstChild
+        }
+
+        Demo.prototype._add = function (data) {
+            // {
+            //     id: 1,
+            //     name: 'A',
+            //     status: 'incoming',
+            //     order: 'beer',
+            //     prediction: 'beer',
+            //     arrival: arrival++
+            // }
+
+            var element = this._htmlToElement([
+                // '<div class="row my-shuffle-container">',
+                '<figure id="item-' + data.id + '" class="col-3@xs col-4@sm col-3@md picture-item ' + data.status +
+                '" data-statusCode="' +
+                // '<figure class="picture-item ' + data.status + '" data-status="' +
+                data.statusCode +
+                '" data-arrival="' + data.arrival + '" data-id="' + data.id + '">',
+                '<div class="picture-item__inner">',
+                '<div class="aspect aspect--16x9">',
+                '<div class="aspect__inner">',
+                // '<img src="https://picsum.photos/200/300/?random" />',
+                '<img src="https://robohash.org/' + data.name + '.jpg" />',
+                '</div>',
+                '</div>',
+                '<div class="picture-item__details">',
+                '<figcaption class="picture-item__title">',
+                'Name: <span class="name">' + data.name + '</span><br/>',
+                'Id: <span class="id">' + data.id + '</span><br/>',
+                'Status: <span class="status">' + data.status + '</span><br/>',
+                'StatusCode: <span class="statusCode">' + data.statusCode + '</span><br/>',
+                'Arrival: <span class="arrival">' + data.arrival + '</span><br/>',
+                'Order: <span class="order">' + data.order + '</span><br/>',
+                'Prediction: <span class="prediction">' + data.prediction + '</span>',
+                '<div class="progress-container"></div>',
+                '</figcaption>',
+                '<p class="picture-item__tags hidden@xs">',
+                '</p>',
+                '</div>',
+                '</div>',
+                '</figure>',
+                // '</div>'
+            ].join(''))
+            // console.log('element', element)
+            var elements = [element]
+            elements.forEach(function (element) {
+                this.shuffle.element.appendChild(element);
+            }, this);
+            this.shuffle.add(elements);
+        }
+
+        Demo.prototype._sortForBartender = function () {
+            function getId(element) {
+                return parseInt(element.getAttribute('data-id'))
+            }
+
+            function getArrival(element) {
+                return parseInt(element.getAttribute('data-arrival'))
+            }
+
+            function getStatus(element) {
+                return parseInt(element.getAttribute('data-statusCode'))
+            }
+            var options = {
+                compare: function (a, b) {
+                    // Sort by first status, then by waiting arrival time
+                    var statusA = getStatus(a.element)
+                    var statusB = getStatus(b.element)
+                    if (statusA < statusB) {
+                        return -1
+                    }
+                    if (statusA > statusB) {
+                        return 1
+                    }
+                    // At this point, the status are the exact same. Test the arrival time
+                    var arrivalA = getArrival(a.element)
+                    var arrivalB = getArrival(b.element)
+                    if (arrivalA < arrivalB) {
+                        return -1
+                    }
+                    if (arrivalA > arrivalB) {
+                        return 1
+                    }
+
+                }
+            }
+
+            this.shuffle.sort(options)
+        }
+
+        Demo.prototype._removeItem = function (element) {
+            var items = [this.shuffle.getItemByElement(element)]
+            console.log('remove', element, items, items[0].parentNode)
+            this.shuffle.remove(items)
+            // this.shuffle.destroy()
+            // this.shuffle.layout()
+        }
+
+        var demo = new Demo(document.getElementById('grid'))
+        demo._sortForBartender()
+        // demo._add({
+        //     id: 1,
+        //     name: 'E',
+        //     status: 'incoming',
+        //     statusCode: '3',
+        //     order: 'beer',
+        //     prediction: 'beer',
+        //     arrival: new Date().getTime()
+        // })
+        // demo._sortForBartender();
+
+
+        console.log('Init')
+
+        function handleIngressData(data) {
+            data.arrival = new Date().getTime();
+            if (data.status === 'serving') {
+                data.statusCode = '1'
+            } else if (data.status === 'waiting') {
+                data.statusCode = '2'
+            } else if (data.status === 'incoming') {
+                data.statusCode = '3'
+            }
+            console.log('To bartender data', data)
+            var item = document.querySelector('#item-' + data.id)
+            if (item != null) {
+                console.log('Already present, need to update', data.id)
+                item.setAttribute('data-statusCode', data.statusCode)
+                item.setAttribute('data-arrival', new Date().getTime())
+                item.querySelector('.status').textContent = data.status
+                item.querySelector('.statusCode').textContent = data.statusCode
+                item.querySelector('.order').textContent = data.order
+                item.querySelector('.prediction').textContent = data.prediction
+                demo._sortForBartender()
+            } else {
+                console.log('Adding', data.id)
+                demo._add(data)
+            }
+        }
+
+        function serveCustomer() {
+            var serving = document.querySelector("figure[data-statuscode='1']")
+            var waiting = document.querySelector("figure[data-statuscode='2']")
+            // console.log('Customers', serving, waiting)
+            if (serving != null) {
+                // console.log('Customer already being served')
+            } else if (waiting != null) {
+                // console.log('Begin serving customer', waiting)
+                waiting.setAttribute('data-statuscode', '1')
+                waiting.querySelector('.status').textContent = 'serving'
+                waiting.querySelector('.statusCode').textContent = '1'
+                sendFromBartenderData(parseInt(waiting.getAttribute('data-id')), 'serving')
+                demo._sortForBartender()
+                startProgress(waiting)
+            }
+        }
+
+        function sendFromBartenderData(id, status) {
+            socket.emit('fromBartender', {
+                id: id,
+                status: status
+            })
+        }
+
+        function finishedServingCustomer(element) {
+            console.log('Animation has end, finish serving the customer')
+            demo._removeItem(element)
+            demo._sortForBartender()
+            sendFromBartenderData(parseInt(element.getAttribute('data-id')), 'served')
+            serveCustomer()
+        }
+
+        function startProgress(element) {
+            var waitingTime = 2
+            var progressContainer = element.querySelector('.progress-container')
+            var bar = new ProgressBar.Circle(progressContainer, {
+                color: '#aaa',
+                // This has to be the same size as the maximum width to
+                // prevent clipping
+                strokeWidth: 6,
+                trailWidth: 2,
+                easing: 'easeInOut',
+                duration: waitingTime * 1000,
+                text: {
+                    autoStyleContainer: false
+                },
+                from: {
+                    color: '#aaa',
+                    width: 2
+                },
+                to: {
+                    color: '#333',
+                    width: 6
+                },
+                // Set default step function for all animate calls
+                step: function (state, circle) {
+                    circle.path.setAttribute('stroke', state.color);
+                    circle.path.setAttribute('stroke-width', state.width);
+
+                    var value = 10 - Math.round(circle.value() * 10);
+                    if (value === 0) {
+                        circle.setText('');
+                    } else {
+                        circle.setText(value);
+                    }
+
+                }
+            });
+            bar.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+            bar.text.style.fontSize = '0.5rem';
+
+            bar.animate(1.0, function () {
+                finishedServingCustomer(element)
+            });
+        }
+        var socket = io.connect('http://localhost:5100')
+        socket.on('connect', function () {
+            console.log('Connected to server');
+            document.querySelector('.socket-status').textContent = 'Connected'
+            socket.emit('bartenderConnected', {
+                name: 'Garcon Bartender',
+                description: 'Serve every 10 seconds'
+            })
+        })
+        socket.on('disconnect', function () {
+            console.log('Disconnected from server')
+            document.querySelector('.socket-status').textContent = 'Disconnected'
+        })
+        socket.on('toBartender', handleIngressData)
+    </script>
+
+
+
+
+</body>
+
+</html>
