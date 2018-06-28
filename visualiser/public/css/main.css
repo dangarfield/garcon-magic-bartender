@@ -73,8 +73,11 @@ a {
 }
 
 #movementQueue {
-    left: 360px;
+    /* left: 360px;
+    top: 0px; */
+    right: 10px;
     top: 0px;
+    text-align: right;
 }
 
 #predictionResults {

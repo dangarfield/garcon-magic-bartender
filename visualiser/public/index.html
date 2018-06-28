@@ -26,7 +26,7 @@
     var scene, renderer;
     var clock;
     var controls;
-    var stats;
+    // var stats;
 
     var boundaries;
     var entities;
@@ -603,13 +603,13 @@
         controls.minDistance = 100;
         controls.maxDistance = 20000;
 
-        stats = new Stats()
-        stats.domElement.style.position = 'absolute'
-        stats.domElement.style.top = '20px'
-        stats.domElement.style.left = null
-        stats.domElement.style.right = '280px'
-        stats.domElement.style.zIndex = 100;
-        document.body.appendChild(stats.domElement);
+        // stats = new Stats()
+        // stats.domElement.style.position = 'absolute'
+        // stats.domElement.style.top = '20px'
+        // stats.domElement.style.left = null
+        // stats.domElement.style.right = '280px'
+        // stats.domElement.style.zIndex = 100;
+        // document.body.appendChild(stats.domElement);
 
         clock = new THREE.Clock();
 
@@ -679,7 +679,7 @@
 
 
         //Gui
-        var gui = new dat.GUI();
+        // var gui = new dat.GUI();
 
         // var quantity = gui.add(params, 'numEntities', 1, 100).name("Num Of Entities");
         // quantity.onFinishChange(function (value) {
@@ -1043,7 +1043,7 @@
         }
 
         renderer.render(scene, camera);
-        stats.update();
+        // stats.update();
 
     }
     Entity.prototype.setAnimation = function () {

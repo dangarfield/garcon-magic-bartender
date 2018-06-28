@@ -545,12 +545,13 @@
             demo._sortForBartender()
         }
 
+        var waitingTime = 3
+
         function startPouring(element, drink, cb) {
             element.setAttribute('data-pouring', 'true')
             if (element.hasAttribute('data-poured')) {
                 element.removeAttribute('data-poured')
             }
-            var waitingTime = 3
             var progressContainer = element.querySelector('.progress-container')
             var bar = new ProgressBar.Circle(progressContainer, {
                 color: '#aaa',
@@ -601,7 +602,7 @@
             document.querySelector('.socket-status').textContent = 'Connected'
             socket.emit('bartenderConnected', {
                 name: 'Garcon Bartender',
-                description: 'Serve every 10 seconds'
+                description: 'Serve every ' + waitingTime + ' seconds'
             })
         })
         socket.on('disconnect', function () {
