@@ -3,8 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Basic Shuffle Demo</title>
-
+    <title>Garcon - Magic Bartender - Bartender Dashboard</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1" / <!-- Prefetch DNS for external assets -->
     <link rel="dns-prefetch" href="https://fonts.gstatic.com">
@@ -12,12 +11,20 @@
     <link rel="dns-prefetch" href="https://unpkg.com">
 
 
-    <link rel="stylesheet" href="//vestride.github.io/Shuffle/css/normalize.css" />
+    <link rel="stylesheet" href="//stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" />
+    <!-- <link rel="stylesheet" href="//vestride.github.io/Shuffle/css/normalize.css" /> -->
     <link rel="stylesheet" href="//vestride.github.io/Shuffle/css/style.css" />
     <link rel="stylesheet" href="//vestride.github.io/Shuffle/css/shuffle-styles.css" />
+    <link rel="stylesheet" href="/css/libs/animate.css" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,700">
+    <link rel='stylesheet' href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,300italic">
 
     <style>
+        body {
+            font-family: Roboto, sans-serif;
+            font-weight: 300px;
+        }
+
         .picture-item {
             height: 350px;
         }
@@ -30,11 +37,39 @@
             background-color: lightcyan;
         }
 
+        figure[data-statuscode="2"] .picture-item__inner {
+            background-color: lightcyan;
+        }
+
         .progress-container {
             margin: 0;
             width: 50px;
             height: 50px;
             position: relative;
+        }
+
+        .countServed span,
+        .countPredicted span,
+        .countWasted span {
+            display: inline-block;
+        }
+
+        .card {
+            padding: 25px;
+            text-align: center;
+        }
+
+        .counter-number {
+            font-size: 40px;
+        }
+
+        .titles {
+            padding: 28px 8px 0px;
+        }
+
+        .arrival-holder,
+        .statusCode-holder {
+            display: none;
         }
     </style>
 </head>
@@ -46,13 +81,51 @@
 
     <main role="main" id="main">
 
-        <div class="container">
-
-            <h1>Garcon - Magic Bartender - Bartender Dashboard</h1>
-
-            <h3>Connection Status:
-                <span class="socket-status">Disconnected</span>
-            </h3>
+        <div class="container-fluid titles">
+            <div class="row">
+                <div class="col">
+                    <div class="card card-block p-25">
+                        <div class="counter counter-lg">
+                            <span class="counter-number">GARCON!</span>
+                            <div class="counter-label text-uppercase">Bartender
+                                <span class="socket-status">Disconnected</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card card-block p-25">
+                        <div class="counter counter-lg">
+                            <span class="counter-number countServed">
+                                <span>0</span>
+                            </span>
+                            <div class="counter-label text-uppercase">Customers Served</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card card-block p-25">
+                        <div class="counter counter-lg">
+                            <span class="counter-number countPredicted">
+                                <span>0</span>
+                            </span>
+                            <div class="counter-label text-uppercase">Successfully Predicted</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card card-block p-25">
+                        <div class="counter counter-lg">
+                            <span class="counter-number countWasted">
+                                <span>0</span>
+                            </span>
+                            <div class="counter-label text-uppercase">Wasted Drinks</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container-fluid">
             <div id="grid" class="row my-shuffle-container">
 
                 <!-- <figure class="col-3@xs col-4@sm col-3@md picture-item" data-date-created="2017-04-30" data-title="Lake Walchen">
@@ -98,7 +171,7 @@
             });
             this.shuffle.on(Shuffle.EventType.LAYOUT, function () {
                 console.log('Things finished moving!');
-                serveCustomer()
+                // serveCustomer()
             });
             this.mode = 'exclusive';
         };
@@ -137,13 +210,17 @@
                 '</div>',
                 '<div class="picture-item__details">',
                 '<figcaption class="picture-item__title">',
-                'Name: <span class="name">' + data.name + '</span><br/>',
-                'Id: <span class="id">' + data.id + '</span><br/>',
-                'Status: <span class="status">' + data.status + '</span><br/>',
-                'StatusCode: <span class="statusCode">' + data.statusCode + '</span><br/>',
-                'Arrival: <span class="arrival">' + data.arrival + '</span><br/>',
-                'Order: <span class="order">' + data.order + '</span><br/>',
-                'Prediction: <span class="prediction">' + data.prediction + '</span>',
+                '<div class="name-holder">Name: <span class="name">' + data.name +
+                '</span> (ID: <span class="id">' + data.id + '</span>)</div>',
+                '<div class="status-holder">Status: <span class="status">' + data.status + '</span></div>',
+                '<div class="statusCode-holder">StatusCode: <span class="statusCode">' + data.statusCode +
+                '</span></div>',
+                '<div class="arrival-holder">Arrival: <span class="arrival">' + data.arrival +
+                '</span></div>',
+                '<div class="order-holder">Order: <span class="order">' + data.order + '</span></div>',
+                '<div class="prediction-holder">Prediction: <span class="prediction">' + data.prediction +
+                '</span></div>',
+                '<div class="poured-holder">Poured: <span class="poured"></span></div>',
                 '<div class="progress-container"></div>',
                 '</figcaption>',
                 '<p class="picture-item__tags hidden@xs">',
@@ -159,6 +236,7 @@
                 this.shuffle.element.appendChild(element);
             }, this);
             this.shuffle.add(elements);
+            this._sortForBartender()
         }
 
         Demo.prototype._sortForBartender = function () {
@@ -197,7 +275,9 @@
                 }
             }
 
-            this.shuffle.sort(options)
+            var items = this.shuffle.sort(options)
+            console.log('SORTED ITEMS', items)
+            this.items = items
         }
 
         Demo.prototype._removeItem = function (element) {
@@ -206,6 +286,9 @@
             this.shuffle.remove(items)
             // this.shuffle.destroy()
             // this.shuffle.layout()
+        }
+        Demo.prototype._getItems = function () {
+            return this.shuffle._getItems()
         }
 
         var demo = new Demo(document.getElementById('grid'))
@@ -226,12 +309,14 @@
 
         function handleIngressData(data) {
             data.arrival = new Date().getTime();
-            if (data.status === 'serving') {
-                data.statusCode = '1'
+            if (data.status === 'incorrect') {
+                data.statusCode = 0
+            } else if (data.status === 'serving') {
+                data.statusCode = 1
             } else if (data.status === 'waiting') {
-                data.statusCode = '2'
+                data.statusCode = 2
             } else if (data.status === 'incoming') {
-                data.statusCode = '3'
+                data.statusCode = 3
             }
             console.log('To bartender data', data)
             var item = document.querySelector('#item-' + data.id)
@@ -248,42 +333,224 @@
                 console.log('Adding', data.id)
                 demo._add(data)
             }
+            console.log('Ingress -> Serve Customer')
+            // serveCustomer()
+        }
+
+        function setCustomerStatus(customer, statusCode, status) {
+            customer.setAttribute('data-statuscode', statusCode)
+            customer.querySelector('.status').textContent = status
+            customer.querySelector('.statusCode').textContent = statusCode
+            demo._sortForBartender()
         }
 
         function serveCustomer() {
-            var serving = document.querySelector("figure[data-statuscode='1']")
-            var waiting = document.querySelector("figure[data-statuscode='2']")
-            // console.log('Customers', serving, waiting)
-            if (serving != null) {
-                // console.log('Customer already being served')
-            } else if (waiting != null) {
-                // console.log('Begin serving customer', waiting)
-                waiting.setAttribute('data-statuscode', '1')
-                waiting.querySelector('.status').textContent = 'serving'
-                waiting.querySelector('.statusCode').textContent = '1'
-                sendFromBartenderData(parseInt(waiting.getAttribute('data-id')), 'serving')
-                demo._sortForBartender()
-                startProgress(waiting)
+            // console.log('serveCustomer')
+
+            var removingItems = []
+            var pouringItems = []
+            var incorrectItems = []
+            var waitingAlreadyPoured = []
+            var waitingNoPoured = []
+            var incomingAlreadyPoured = []
+            var incomingNoPoured = []
+
+            demo.items.forEach(function (item) {
+                var element = item.element
+                console.log('element', element.attributes)
+                var removing = element.hasAttribute('data-removing')
+                var poured = element.hasAttribute('data-poured')
+                var pouring = element.hasAttribute('data-pouring')
+                var pouring = element.hasAttribute('data-pouring')
+                var statusCode = parseInt(element.getAttribute('data-statuscode'))
+                if (removing) {
+                    removingItems.push(element)
+                } else if (pouring) {
+                    pouringItems.push(element)
+                } else if (statusCode === 0) {
+                    incorrectItems.push(element)
+                } else if (statusCode === 2 && poured) {
+                    waitingAlreadyPoured.push(element)
+                } else if (statusCode === 2 && !poured) {
+                    waitingNoPoured.push(element)
+                } else if (statusCode === 3 && poured) {
+                    incomingAlreadyPoured.push(element)
+                } else if (statusCode === 3 && !poured) {
+                    incomingNoPoured.push(element)
+                }
+            })
+
+            console.log('serveCustomer arrangedItems', removingItems, pouringItems, incorrectItems,
+                waitingAlreadyPoured,
+                waitingNoPoured, incomingAlreadyPoured, incomingNoPoured)
+
+            // Are there any incorrect destination predictions?
+            // - Yes
+            //   - Have we poured their wasted drinks?
+            //     - Yes -> Update countWasted, remove customer from list
+            // - No -> Continue
+            removingItems.forEach(function (customer) {
+                console.log('In process of removing customer, customer')
+            })
+            incorrectItems.forEach(function (customer) {
+                var id = customer.getAttribute('data-id')
+                console.log('Customer didnt arrive at bar', id)
+                customerDidNotArrive(customer)
+                var pouring = customer.getAttribute('data-pouring')
+                var poured = customer.getAttribute('data-poured')
+                if (pouring || poured) {
+                    console.log('Customer didnt arrive at bar and poured a wasted drink', id, pouring, poured)
+                    updateStats('countWasted')
+                    customer.setAttribute('data-removing', 'true')
+                    demo._removeItem(customer)
+                    demo._sortForBartender()
+                    // TODO - Need to stop callback after the pouring element
+                }
+            })
+
+            // Is the bartender currently pouring a drink for someone?
+            // - Yes -> Do nothing
+            // - No -> Continue
+            if (pouringItems.length > 0) {
+                console.log('Bartender already pouring a drink, stop loop', pouringItems)
+                return null
             }
+
+            var startedPouring = false
+
+            // Who should we be pouring a drink for? Sort by queue position, filter out those incoming customers who already have drinks being poured
+            // - Waiting - already poured
+            //   - Is the poured drink the one they wanted?
+            //     - Yes -> complete. Update countServed, countPredicted, remove customer from list, send served event
+            //     - No -> Update countWasted, set status to serving, send serving event, begin pouring drink that they have ordered, set pouring active status
+            //       - Finished -> complete. remove pouring active status, Update countServed, remove customer from list, send served event
+            waitingAlreadyPoured.forEach(function (customer) {
+                if (!startedPouring) {
+                    var order = customer.querySelector('.order').textContent
+                    var poured = customer.querySelector('.poured').textContent
+                    if (order === poured) {
+                        console.log('Bartender serving waiting customer, with the right predicted drink')
+                        updateStats('countServed')
+                        updateStats('countPredicted')
+                        finishedServingCustomer(customer, 'a')
+                    } else {
+                        console.log(
+                            'Bartender made the wrong drink for a waiting customer, pouring the right one now'
+                        )
+                        updateStats('countWasted')
+
+                        setCustomerStatus(customer, '1', 'serving')
+                        sendFromBartenderData(parseInt(customer.getAttribute('data-id')), 'serving')
+
+                        startedPouring = true
+                        startPouring(customer, order, function (customer) {
+                            console.log(
+                                'Bartender served waiting customer, that was previously poured the wrong drink'
+                            )
+                            updateStats('countServed')
+                            finishedServingCustomer(customer, 'b')
+                        })
+
+                    }
+                }
+
+            })
+
+            // - Waiting - no drink poured ->  set status to serving, send serving event, begin pouring drink that they have ordered, set pouring active status
+            //   - Finished -> complete. remove pouring active status, Update countServed, remove customer from list, send served event
+            waitingNoPoured.forEach(function (customer) {
+                if (!startedPouring) {
+                    var order = customer.querySelector('.order').textContent
+                    setCustomerStatus(customer, '1', 'serving')
+                    sendFromBartenderData(parseInt(customer.getAttribute('data-id')), 'serving')
+                    startedPouring = true
+                    startPouring(customer, order, function (customer) {
+                        console.log('Bartender served waiting customer')
+                        updateStats('countServed')
+                        finishedServingCustomer(customer, 'c')
+                    })
+                }
+            })
+            // - Incoming -
+            //   - Has the customer already got a poured drink?
+            //     - Yes - Should not be possible, throw error here, we should've filtered them out already
+            //     - No - Begin pouring drink that we have predicted, set pouring active status
+            //       - Finished -> Update poured, remove pouring active status
+            incomingNoPoured.forEach(function (customer) {
+                if (!startedPouring) {
+                    var prediction = customer.querySelector('.prediction').textContent
+                    startedPouring = true
+                    startPouring(customer, prediction, function (customer) {
+                        console.log('Bartender poured drink for incoming customer')
+                    })
+                }
+            })
+
+            // - No-one -> Do nothing
+
+
+        }
+        setInterval(serveCustomer, 1000) // For some reason the callbacks unnecessarily complicated
+
+
+        var countServed = 0
+        var countPredicted = 0
+        var countWasted = 0
+
+        function updateStats(className) {
+            // countServed, countPredicted, countWasted
+
+            var element = document.querySelector('.' + className + ' span')
+            var animation
+            var value
+            if (className == 'countServed') {
+                animation = 'tada'
+                value = ++countServed
+            } else if (className == 'countPredicted') {
+                animation = 'rubberBand'
+                value = ++countPredicted
+            } else if (className == 'countWasted') {
+                animation = 'wobble'
+                value = ++countWasted
+            }
+            console.log('updateStats', className, animation, value)
+            element.textContent = value
+            element.setAttribute('class', animation + ' animated')
+            setTimeout(function () {
+                element.removeAttribute('class')
+            }, 2000)
+
         }
 
-        function sendFromBartenderData(id, status) {
+        function sendFromBartenderData(id, status, flag) {
             socket.emit('fromBartender', {
                 id: id,
-                status: status
+                status: status,
+                flag: flag
             })
+            console.log('fromBartender', id, status)
         }
 
-        function finishedServingCustomer(element) {
-            console.log('Animation has end, finish serving the customer')
+        function finishedServingCustomer(element, flag) {
+            console.log('Animation has end, finish serving the customer', element)
+            element.setAttribute('data-removing', 'true')
             demo._removeItem(element)
             demo._sortForBartender()
-            sendFromBartenderData(parseInt(element.getAttribute('data-id')), 'served')
-            serveCustomer()
+            sendFromBartenderData(parseInt(element.getAttribute('data-id')), 'served', flag)
         }
 
-        function startProgress(element) {
-            var waitingTime = 2
+        function customerDidNotArrive(element) {
+            console.log('Customer did not arrive')
+            demo._removeItem(element)
+            demo._sortForBartender()
+        }
+
+        function startPouring(element, drink, cb) {
+            element.setAttribute('data-pouring', 'true')
+            if (element.hasAttribute('data-poured')) {
+                element.removeAttribute('data-poured')
+            }
+            var waitingTime = 3
             var progressContainer = element.querySelector('.progress-container')
             var bar = new ProgressBar.Circle(progressContainer, {
                 color: '#aaa',
@@ -309,11 +576,11 @@
                     circle.path.setAttribute('stroke', state.color);
                     circle.path.setAttribute('stroke-width', state.width);
 
-                    var value = 10 - Math.round(circle.value() * 10);
+                    var value = 100 - Math.round(circle.value() * 100);
                     if (value === 0) {
                         circle.setText('');
                     } else {
-                        circle.setText(value);
+                        circle.setText(value + '%');
                     }
 
                 }
@@ -322,7 +589,10 @@
             bar.text.style.fontSize = '0.5rem';
 
             bar.animate(1.0, function () {
-                finishedServingCustomer(element)
+                element.removeAttribute('data-pouring')
+                element.setAttribute('data-poured', 'true')
+                element.querySelector('.poured').textContent = drink
+                cb(element, bar)
             });
         }
         var socket = io.connect('http://localhost:5100')

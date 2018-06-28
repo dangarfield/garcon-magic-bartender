@@ -1799,6 +1799,7 @@
         this._setContainerSize()
 
         this.lastSort = sortOptions
+        return items
       }
 
       /**
@@ -1959,8 +1960,14 @@
             // console.log('element for removal element', element.element)
             // console.log('element for removal parent', element.element.parentNode)
 
-            // For some reason, the element I'm passing in here is
-            element.element.parentNode.removeChild(element.element)
+            // // For some reason, the element I'm passing in here is
+            if (element.element != null && element.element.parentNode != null) {
+              element.element.parentNode.removeChild(element.element)
+            }
+            if (element.parentNode != null && element.parentNode != null) {
+              element.parentNode.removeChild(element)
+            }
+            // element.parentNode.removeChild(element)
           })
 
           _this10._dispatch(Shuffle.EventType.REMOVED, { collection: collection })
