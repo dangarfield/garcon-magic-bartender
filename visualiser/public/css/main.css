@@ -104,3 +104,16 @@ a {
     bottom: 20px;
     left: 20px
 }
+
+.avatar {
+    height: 30px;
+    width: 30px;
+}
+
+.avatar.left {
+    float: left;
+}
+
+.avatar.right {
+    float: right;
+}

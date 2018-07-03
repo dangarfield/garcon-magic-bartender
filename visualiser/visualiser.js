@@ -58,6 +58,11 @@ io.on('connection', function (socket) {
     console.log('connectedBartenders', connectedBartenders.length)
     sendConnectedBartenderData()
   })
+  socket.on('resetBartender', function () {
+    connectedBartenders.forEach(function (bartenderSocket) {
+      bartenderSocket.emit('resetBartender', {})
+    })
+  })
 })
 
 function sendConnectedBartenderData () {

@@ -109,7 +109,7 @@
                             <span class="counter-number countPredicted">
                                 <span>0</span>
                             </span>
-                            <div class="counter-label text-uppercase">Successfully Predicted</div>
+                            <div class="counter-label text-uppercase">Successfully Served Early</div>
                         </div>
                     </div>
                 </div>
@@ -210,8 +210,8 @@
                 '</div>',
                 '<div class="picture-item__details">',
                 '<figcaption class="picture-item__title">',
-                '<div class="name-holder">Name: <span class="name">' + data.name +
-                '</span> (ID: <span class="id">' + data.id + '</span>)</div>',
+                '<div class="name-holder"><b><span class="name">' + data.name +
+                '</span></b>',
                 '<div class="status-holder">Status: <span class="status">' + data.status + '</span></div>',
                 '<div class="statusCode-holder">StatusCode: <span class="statusCode">' + data.statusCode +
                 '</span></div>',
@@ -428,6 +428,8 @@
                 if (!startedPouring) {
                     var order = customer.querySelector('.order').textContent
                     var poured = customer.querySelector('.poured').textContent
+
+
                     if (order === poured) {
                         console.log('Bartender serving waiting customer, with the right predicted drink')
                         updateStats('countServed')
@@ -465,8 +467,13 @@
                     sendFromBartenderData(parseInt(customer.getAttribute('data-id')), 'serving')
                     startedPouring = true
                     startPouring(customer, order, function (customer) {
-                        console.log('Bartender served waiting customer')
+                        console.log('Bartender served waiting customer', customer.getAttribute(
+                            'data-predicted'))
                         updateStats('countServed')
+                        if (customer.getAttribute('data-predicted') === 'true') {
+                            console.log('PREDICTED CORRECTLY')
+                            updateStats('countPredicted')
+                        }
                         finishedServingCustomer(customer, 'c')
                     })
                 }
@@ -480,6 +487,7 @@
                 if (!startedPouring) {
                     var prediction = customer.querySelector('.prediction').textContent
                     startedPouring = true
+                    customer.setAttribute('data-predicted', 'true')
                     startPouring(customer, prediction, function (customer) {
                         console.log('Bartender poured drink for incoming customer')
                     })
@@ -545,7 +553,7 @@
             demo._sortForBartender()
         }
 
-        var waitingTime = 3
+        var waitingTime = 2
 
         function startPouring(element, drink, cb) {
             element.setAttribute('data-pouring', 'true')
@@ -610,6 +618,10 @@
             document.querySelector('.socket-status').textContent = 'Disconnected'
         })
         socket.on('toBartender', handleIngressData)
+        socket.on('resetBartender', function () {
+            console.log('Reset request initiated')
+            window.location.reload()
+        })
     </script>
 
 

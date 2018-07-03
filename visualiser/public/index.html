@@ -9,6 +9,7 @@
     <script src="/public/js/libs/three.min.js"></script>
     <script src="/public/js/libs/socket.io.slim.js"></script>
     <script src="/public/js/libs/axios.min.js"></script>
+    <script src="/public/js/libs/chance.min.js"></script>
     <script src="/public/js/threejs/sea3d/SEA3D.js"></script>
     <script src="/public/js/threejs/sea3d/SEA3DLZMA.js"></script>
     <script src="/public/js/threejs/sea3d/SEA3DLoader.js"></script>
@@ -152,8 +153,11 @@
         newQueue.id = 'barQueueItems'
 
         barQueue.forEach(function (item) {
+
             var p = document.createElement('p')
-            var text = 'ID: ' + item.id + ' Name: ' + item.name
+            var text = ''
+            text = text + '<img class="avatar right" src="//robohash.org/' + item.name + '.jpg" />'
+            text = text + 'ID: ' + item.id + ' Name: ' + item.name
             text = text + ' Status: ' + item.status
             // if (item.status == 'serving') {
             text = text + ' Drink: ' + item.drink
@@ -161,7 +165,7 @@
             if (item.prediction) {
                 text = text + ' Prediction: ' + item.prediction
             }
-            p.textContent = text
+            p.innerHTML = text
             newQueue.appendChild(p)
         })
         queueParent.removeChild(oldQueue);
@@ -177,14 +181,16 @@
 
         movementList.forEach(function (item) {
             var p = document.createElement('p')
-            var text = 'ID: ' + item.id + ' Name: ' + item.name + ' Location: ' + item.location
+            var text = ''
+            text = text + '<img class="avatar left" src="//robohash.org/' + item.name + '.jpg" />'
+            text = text + 'ID: ' + item.id + ' Name: ' + item.name + ' Location: ' + item.location
             if (item.prediction.location) {
                 text = text + ' Prediction: ' + item.prediction.location
                 if (item.prediction.location === 'bar' && item.prediction.drink) {
                     text = text + ' ' + item.prediction.drink
                 }
             }
-            p.textContent = text
+            p.innerHTML = text
             newQueue.appendChild(p)
         })
         queueParent.removeChild(oldQueue);
@@ -254,6 +260,7 @@
     }
 
     var rand = LCG(135)
+    var chance = new Chance(135)
 
     function onClick(event) {
         var mouse3D = new THREE.Vector3((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) *
@@ -458,7 +465,8 @@
             clone.castShadow = true;
             var entity = new SteeringEntity(clone)
             entity._id = i
-            entity.name = i
+            entity.name = chance.name()
+            entity.photo = 'https://robohash.org/' + entity.name + '.jpg'
             entity.origin = entityPosition.origin
             entity.position.set(entityPosition.origin.x, 0, entityPosition.origin.z);
             entity.paths = {}
@@ -578,7 +586,7 @@
 
     function init(element) {
         container = document.getElementById(element);
-        camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, params.size.x * 10);
+        camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, params.size.x * 10);
         scene = new THREE.Scene();
 
         renderer = new THREE.WebGLRenderer({
@@ -595,13 +603,15 @@
         renderer.domElement.style.top = 0;
         container.appendChild(renderer.domElement);
 
-        camera.position.set(0, params.size.x * 2, params.size.z * 2);
+        camera.position.set(0, params.size.x * 1, params.size.z * 3);
         camera.lookAt(new THREE.Vector3(0, 0, 0));
 
         controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.maxPolarAngle = Math.PI * 0.5;
         controls.minDistance = 100;
         controls.maxDistance = 20000;
+        controls.autoRotate = true
+        controls.autoRotateSpeed = 1.0
 
         // stats = new Stats()
         // stats.domElement.style.position = 'absolute'
@@ -741,7 +751,8 @@
         // })
         window.addEventListener('resize', onWindowResize, false);
         document.addEventListener('mousedown', onClick, true);
-        animate();
+        resetConnectedBartenders()
+        animate()
     }
 
     function xZToPoint(xZ) {
@@ -959,6 +970,10 @@
             prediction: prediction
         }
         socket.emit('toBartender', data)
+    }
+
+    function resetConnectedBartenders() {
+        socket.emit('resetBartender')
     }
 
     function handleBartenderCommunication(data) {
