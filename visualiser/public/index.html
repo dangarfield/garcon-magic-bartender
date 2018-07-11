@@ -1141,6 +1141,11 @@
         else
             this.seek(wayPoint)
     }
+
+    // Reset every X seconds so UI works clearly in demo lab
+    setTimeout(function () {
+        window.location.reload(true)
+    }, 3 * 60 * 1000)
 </script>
 
 <body onload="loadModels()">
