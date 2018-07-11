@@ -1143,9 +1143,29 @@
     }
 
     // Reset every X seconds so UI works clearly in demo lab
-    setTimeout(function () {
-        window.location.reload(true)
-    }, 3 * 60 * 1000)
+    var seconds = 0
+    setInterval(function () {
+        seconds += 1;
+        s = seconds
+        var h = Math.floor(s / 3600);
+        s -= h * 3600;
+        var m = Math.floor(s / 60);
+        s -= m * 60;
+        if (h < 10) {
+            h = "0" + h;
+        }
+        if (m < 10) {
+            m = "0" + m;
+        }
+        if (s < 10) {
+            s = "0" + s;
+        }
+        var text = h + ':' + m + ':' + s;
+        document.querySelector('.seconds-counter').innerText = text
+        if (seconds > (5 * 60)) {
+            window.location.reload(true)
+        }
+    }, 1000)
 </script>
 
 <body onload="loadModels()">
@@ -1170,6 +1190,9 @@
         <div id="connectedBartendersItems">
             <p>None - Auto-serve within 3 seconds</p>
         </div>
+    </div>
+    <div id="secondsContainer">
+        <p class="seconds-counter"></p>
     </div>
     <div id="loading-msg"></div>
 </body>

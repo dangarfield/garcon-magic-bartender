@@ -60,7 +60,8 @@ a {
 #barQueue,
 #movementQueue,
 #predictionResults,
-#connectedBartenders {
+#connectedBartenders,
+#secondsContainer {
     font-family: 'opensans';
     position: absolute;
     font-size: 11px;
@@ -91,10 +92,17 @@ a {
     text-align: right;
 }
 
+#secondsContainer {
+    left: calc(50% - 150px);
+    bottom: 10px;
+    text-align: center;
+}
+
 #barQueue h3,
 #movementQueue h3,
 #predictionResults h3,
-#connectedBartenders h3 {
+#connectedBartenders h3,
+#secondsContainer h3 {
     color: #BFFF00;
     font-weight: bold;
 }
