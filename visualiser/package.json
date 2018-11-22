@@ -5,7 +5,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node visualiser.js"
+    "start": "node visualiser.js",
+    "deploy": "now --public --token $NOW_TOKEN_GARCON_VISUALISER && now alias --token $NOW_TOKEN_GARCON_VISUALISER && NOW_TOKEN=${NOW_TOKEN_GARCON_VISUALISER} now-pipeline-prune && now ls lazy-beerstard --token $NOW_TOKEN_GARCON_VISUALISER",
+    "tunnel-vis": "lt -p 5100 -s garcon-visualiser",
+    "tunnel-pre": "lt -p 5101 -s garcon-predictor",
+    "tunnel-bar": "lt -p 5102 -s garcon-bartender"
   },
   "author": "",
   "license": "ISC",

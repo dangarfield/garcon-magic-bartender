@@ -1,0 +1,6 @@
+{
+    "name": "garcon-predictor",
+    "alias": "garcon-predictor",
+    "type": "docker",
+    "env": {}
+}

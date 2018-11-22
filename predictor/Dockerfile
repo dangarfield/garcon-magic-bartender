@@ -1,4 +1,5 @@
-FROM python:3
+#FROM python:3
+FROM frolvlad/alpine-python-machinelearning
 COPY . /app
 WORKDIR /app
 RUN pip install -r requirements.txt

@@ -92,8 +92,17 @@
         start: false
     }
 
+    var visualiserHost = 'http://localhost:5100'
+    var predictorHost = 'http://localhost:5101'
+    var bartenderHost = 'http://localhost:5102'
+    if (document.location.host.includes('localtunnel.me')) {
+        visualiserHost = 'https://garcon-visualiser.localtunnel.me'
+        predictorHost = 'https://garcon-predictor.localtunnel.me'
+        bartenderHost = 'https://garcon-bartender.localtunnel.me'
+    }
 
-    var socket = io.connect('http://localhost:5100')
+
+    var socket = io.connect(visualiserHost)
 
     var clickHistory = []
 
@@ -839,7 +848,7 @@
 
 
     async function getPrediction(modelType, features) {
-        const url = 'http://localhost:5101/predict/' + modelType + '?features=' + features.join(',')
+        const url = predictorHost + '/predict/' + modelType + '?features=' + features.join(',')
         //   console.log('getMovementPrediction url', url)
         const res = await axios(url)
         //   console.log('getMovementPrediction res.data', res.data)
@@ -1162,7 +1171,7 @@
         }
         var text = h + ':' + m + ':' + s;
         document.querySelector('.seconds-counter').innerText = text
-        if (seconds > (5 * 60)) {
+        if (seconds > (4 * 60)) {
             window.location.reload(true)
         }
     }, 1000)

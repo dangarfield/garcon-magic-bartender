@@ -76,4 +76,4 @@ typings/
 .DS_Store
 
 # Don't store generated training data
-training-data*
+training-data/*

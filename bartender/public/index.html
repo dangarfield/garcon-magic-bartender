@@ -160,6 +160,15 @@
 
 
     <script>
+        var visualiserHost = 'http://localhost:5100'
+        var predictorHost = 'http://localhost:5101'
+        var bartenderHost = 'http://localhost:5102'
+        if (document.location.host.includes('localtunnel.me')) {
+            visualiserHost = 'https://garcon-visualiser.localtunnel.me'
+            predictorHost = 'https://garcon-predictor.localtunnel.me'
+            bartenderHost = 'https://garcon-bartender.localtunnel.me'
+        }
+
         var Shuffle = window.Shuffle;
 
         var Demo = function (element) {
@@ -604,7 +613,7 @@
                 cb(element, bar)
             });
         }
-        var socket = io.connect('http://localhost:5100')
+        var socket = io.connect(visualiserHost)
         socket.on('connect', function () {
             console.log('Connected to server');
             document.querySelector('.socket-status').textContent = 'Connected'

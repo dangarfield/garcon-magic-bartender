@@ -1,0 +1,12 @@
+{
+  "name": "predictor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "now --public --token $NOW_TOKEN_GARCON_PREDICTOR && now alias --token $NOW_TOKEN_GARCON_PREDICTOR && NOW_TOKEN=${NOW_TOKEN_GARCON_PREDICTOR} now-pipeline-prune && now ls lazy-beerstard --token $NOW_TOKEN_GARCON_PREDICTOR",
+    "tunnel-pre": "lt -p 5101 -s garcon-predictor"
+  },
+  "author": "",
+  "dependencies": {}
+}

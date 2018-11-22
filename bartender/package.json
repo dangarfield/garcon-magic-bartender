@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node bartender.js"
+    "start": "node bartender.js",
+    "deploy": "now --public --token $NOW_TOKEN_GARCON_BARTENDER && now alias --token $NOW_TOKEN_GARCON_BARTENDER && NOW_TOKEN=${NOW_TOKEN_GARCON_BARTENDER} now-pipeline-prune && now ls lazy-beerstard --token $NOW_TOKEN_GARCON_BARTENDER"
   },
   "author": "",
   "license": "ISC",

@@ -77,10 +77,14 @@ function sendConnectedBartenderData () {
 
 function writeToFile (journey) {
 //   console.log('finishedJourney', journey)
-  finishedJourneys.push(journey)
-  processRawData(finishedJourneys)
-  processDrinkTrainingData(journey)
-  processMovementTrainingData(journey)
+  try {
+    finishedJourneys.push(journey)
+    processRawData(finishedJourneys)
+    processDrinkTrainingData(journey)
+    processMovementTrainingData(journey)
+  } catch (error) {
+    console.error('Unable to write files')
+  }
 }
 function processRawData (data) {
   fs.appendFileSync(fileRaw, JSON.stringify(data))
@@ -155,13 +159,17 @@ function getLocationId (location) {
   return locationMapping[location]
 }
 function createFiles () {
-  var day = dateFormat(new Date(), 'yyyy-mm-dd_hh-MM-ss')
-  fileRaw = 'training-data/' + day + '_raw.json'
-  filePosition = 'training-data/' + day + '_position.csv'
-  fileDrink = 'training-data/' + day + '_drink.csv'
-  fs.openSync(fileRaw, 'w')
-  fs.openSync(filePosition, 'w')
-  fs.openSync(fileDrink, 'w')
+  try {
+    var day = dateFormat(new Date(), 'yyyy-mm-dd_hh-MM-ss')
+    fileRaw = 'training-data/' + day + '_raw.json'
+    filePosition = 'training-data/' + day + '_position.csv'
+    fileDrink = 'training-data/' + day + '_drink.csv'
+    fs.openSync(fileRaw, 'w')
+    fs.openSync(filePosition, 'w')
+    fs.openSync(fileDrink, 'w')
+  } catch (error) {
+    console.error('Unable to create files')
+  }
 }
 function processRawFile (file) {
   if (!fs.existsSync(file)) {

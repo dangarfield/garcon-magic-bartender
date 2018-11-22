@@ -66,6 +66,8 @@ def delete_model_route():
 
 @app.route('/upload', methods=['POST'])
 def upload_file_route():
+    if not os.path.exists('data'):
+        os.makedirs('data')
     if 'file' not in request.files:
         print('No file part')
         return redirect('/')
@@ -127,6 +129,8 @@ def predict_route(model_type):
 
 
 def get_available_models():
+    if not os.path.exists('models'):
+        os.makedirs('models')
     model_list = os.listdir('models')
     model_list.sort()
     model_datas = []
@@ -160,6 +164,8 @@ def get_available_models():
 
 
 def load_default_models():
+    if not os.path.exists('models'):
+        os.makedirs('models')
     model_list = os.listdir('models')
     print(model_list)
 
@@ -302,5 +308,6 @@ def train_model(load_function, name, day):
 
 
 if __name__ == '__main__':
+    print('init')
     load_default_models()
     app.run(host='0.0.0.0', port=5101)
