@@ -1,0 +1,27 @@
+{
+    "apps": [{
+        "name": "bartender",
+        "cwd": "bartender",
+        "script": "npm",
+        "args": "start",
+        "watch": true,
+        "ignore_watch": ["node_modules", "*.json"],
+        "env": {}
+    }, {
+        "name": "visualiser",
+        "cwd": "visualiser",
+        "script": "npm",
+        "args": "start",
+        "watch": true,
+        "ignore_watch": ["node_modules", "*.json", "training-data"],
+        "env": {}
+    }, {
+        "name": "predictor",
+        "cwd": "predictor",
+        "script": "/bin/bash",
+        "args": ["-c", "python predictor.py"],
+        "watch": true,
+        "ignore_watch": ["venv", "data", "models", "test"],
+        "env": {}
+    }]
+}

@@ -83,6 +83,7 @@ Installation and Usage
 - cd to visualiser directory `cd visualiser`
 - Install node libraries with `npm install` and also install some global libraries `npm install -g now watchman`
 - Run the app `npm start`, or `node visualiser.js` or `watchman visualiser.js`, whichever you prefer
+- For simplicity, install pm2 - `npm install -g pm2` and run `pm2 start pm2.json`, as seen in `run.sh`
 - Open in browser `http://localhost:5100`, everything should work, you server should start logging journey data making predictions
 - Journey data and a processed format will be available in the `training-data` folder
 - In order to see predictions, you need to run your classifier with a model
